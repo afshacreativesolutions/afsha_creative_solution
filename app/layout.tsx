@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next"
 import { Geist, Outfit } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -151,6 +152,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <JsonLd data={[organizationSchema, localBusinessSchema, websiteSchema]} />
+        <VercelAnalytics />
         <Analytics />
         <ConsentProvider>
           <NavigationTracker />

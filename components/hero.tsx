@@ -45,7 +45,6 @@ const Hero = () => {
                     className="absolute inset-0 z-0 h-full w-full object-cover"
                     muted
                     playsInline
-                    loop
                     preload="none"
                 >
                     {shouldLoadVideo && (
