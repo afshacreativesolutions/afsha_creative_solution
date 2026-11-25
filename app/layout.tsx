@@ -140,6 +140,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={cn("h-full", "antialiased", "font-sans", geist.variable, outfit.variable)}
     >
+      <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/videos/hero-poster.webp"
+          type="image/webp"
+          fetchPriority="high"
+        />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
         <JsonLd data={[organizationSchema, localBusinessSchema, websiteSchema]} />
         <Analytics />

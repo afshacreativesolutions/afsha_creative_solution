@@ -17,10 +17,8 @@ const Testimonials = () => {
                     <div className='w-full text-left  text-sm font-light text-textGray sm:w-[45%] sm:text-right'>
                         From the first measurement to the finished installation, our work is built around the customer&apos;s requirements. See what customers have to say about their experience with Afsha Creative Solution<br/>
                          <Link 
-                            href="https://wa.me/919634776691?text=Hello%20Afsha%20Creative%20Solution%2C%20I%20found%20your%20website%20and%20would%20like%20to%20discuss%20a%20metal%20fabrication%20project." 
-                            target='_blank'
-                            rel="noopener noreferrer"
-                            aria-label="WhatsApp"
+                            href="/contact" 
+                            aria-label="Get a custom metalwork quote"
                             className='inline-block'
                         > 
                             <div className='mt-4 flex justify-start sm:mt-5 sm:justify-end'>

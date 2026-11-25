@@ -52,7 +52,8 @@ const Videos = () => {
                 <div className='relative h-[220px] w-full max-w-[500px] overflow-hidden rounded-xl sm:h-[280px] lg:h-[250px]'>
                     <video
                         ref={video1}
-                        src='/videos/Process/Stainless_steel_stair_railing_fa…_20260924130559_gwr_video_mvp.mp4'
+                        poster='/videos/Process/process-poster.webp'
+                        src='/videos/Process/process-video.mp4'
                         className='absolute inset-0 z-0 h-full w-full object-cover'
                         muted
                         playsInline
@@ -73,7 +74,8 @@ const Videos = () => {
                 <div className='relative h-[min(110vw,440px)] min-h-[260px] w-full overflow-hidden rounded-xl sm:h-[32rem] lg:h-[42rem]'>
                     <video
                         ref={video2}
-                        src="/videos/Products/Architectural_metalwork_promotio…_1080p_20260924135445.mp4"
+                        poster='/videos/Products/products-poster.webp'
+                        src="/videos/Products/products-video.mp4"
                         className='absolute inset-0 z-0 h-full w-full object-cover'
                         muted
                         playsInline

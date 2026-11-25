@@ -99,9 +99,7 @@ export async function trackEvent(
       page_location: window.location.href,
       page_title: document.title,
     });
-  }
-
-  if (w.dataLayer && Array.isArray(w.dataLayer)) {
+  } else if (w.dataLayer && Array.isArray(w.dataLayer) && (!consent || consent.categories.analytics)) {
     w.dataLayer.push({
       event: eventName,
       ...properties,

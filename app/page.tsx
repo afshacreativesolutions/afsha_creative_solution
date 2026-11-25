@@ -111,7 +111,7 @@ export default async function Home() {
 
           <ol className="mt-9 grid gap-3 sm:grid-cols-2 lg:mt-12 lg:grid-cols-4 lg:gap-4">
             {[
-              { number: "01", title: "Understand your space", description: "We discuss the location, style, size, and needs of your project." },
+              { number: "01", title: "Understand your space", description: "We discuss the location, design, size, and needs of your project." },
               { number: "02", title: "Plan the details", description: "Choose materials, finishes, and custom details with our team." },
               { number: "03", title: "Craft with care", description: "Your metalwork is fabricated to the agreed design and measurements." },
               { number: "04", title: "Complete your project", description: "We coordinate finishing and installation around your project needs." },

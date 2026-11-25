@@ -44,6 +44,7 @@ export const Collections = ({ collectionsData }: { collectionsData: collectionDa
                         title={item.title}
                         image={item.image}
                         href={item.href}
+                        sizes='(max-width: 640px) 50vw, (max-width: 1024px) 240px, 240px'
                         height='h-[48vw] min-h-[160px] max-h-[250px] sm:h-60'
                         width='w-full sm:w-60'
                         rounded='rounded-xl'

@@ -6,6 +6,7 @@ type cardType = {
     height?: string
     width?: string
     loading?: 'eager' | 'lazy'
+    sizes?: string
     image: string | StaticImageData
     title: string
     description?: string
@@ -15,7 +16,7 @@ type cardType = {
     onClick?: () => void
 }
 
-const Card = ({ height = "h-120", width = "w-90", loading = 'lazy', rounded='rounded-md' ,image, title, description, tagline, href, onClick }: cardType) => {
+const Card = ({ height = "h-120", width = "w-90", loading = 'lazy', sizes = '(max-width: 640px) 85vw, (max-width: 1024px) 360px, 400px', rounded='rounded-md' ,image, title, description, tagline, href, onClick }: cardType) => {
     const isExternal = typeof image === 'string' && image.startsWith('http')
     const isSupabase = typeof image === 'string' && image.includes('supabase.co')
     const shouldSkipOptimization = isExternal && !isSupabase
@@ -28,7 +29,7 @@ const Card = ({ height = "h-120", width = "w-90", loading = 'lazy', rounded='rou
                     fill
                     loading={loading}
                     unoptimized={shouldSkipOptimization}
-                    sizes='(max-width: 640px) 85vw, (max-width: 1024px) 360px, 400px'
+                    sizes={sizes}
                     alt={title}
                     className='absolute z-0 object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-focus:scale-105'
                 />

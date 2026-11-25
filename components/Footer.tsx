@@ -161,10 +161,8 @@ const Footer = () => {
                         <div className='text-textGold text-xs font-bold tracking-[0.3em]'>GET A QUOTE</div>
                         <div className='text-sm font-extralight text-textGray tracking-[0.03em]'>Receive architectural lookbooks, product spec sheets, and new collections.</div>
                         <Link className='block w-full max-w-[280px] sm:w-fit' 
-                         href="https://wa.me/919634776691?text=Hello%20Afsha%20Creative%20Solution%2C%20I%20found%20your%20website%20and%20would%20like%20to%20discuss%20a%20metal%20fabrication%20project."
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="WhatsApp"
+                         href="/contact"
+                         aria-label="Contact us for a quote"
                         ><AnimatedButton iconColor='#CDA274' textColor='#CDA274' dotColor='#000000' text='Get a Quote' /></Link>
                     </div>
 

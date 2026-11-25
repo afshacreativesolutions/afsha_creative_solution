@@ -32,7 +32,7 @@ export default function Analytics() {
       {/* 2. Google Tag Manager (GTM) */}
       {gtmId && (
         <>
-          <Script id="gtm" strategy="afterInteractive">
+          <Script id="gtm" strategy="lazyOnload">
             {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtmId}');`}
           </Script>
           <noscript>
@@ -51,9 +51,9 @@ export default function Analytics() {
         <>
           <Script
             src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-            strategy="afterInteractive"
+            strategy="lazyOnload"
           />
-          <Script id="ga4" strategy="afterInteractive">
+          <Script id="ga4" strategy="lazyOnload">
             {`
               gtag('js', new Date());
               gtag('config', '${gaId}', {
@@ -67,7 +67,7 @@ export default function Analytics() {
 
       {/* 4. Google Ads Conversion Tag (if configured) */}
       {googleAdsId && (
-        <Script id="google-ads" strategy="afterInteractive">
+        <Script id="google-ads" strategy="lazyOnload">
           {`
             gtag('config', '${googleAdsId}');
           `}
@@ -77,7 +77,7 @@ export default function Analytics() {
       {/* 5. Meta Pixel */}
       {metaPixelId && (
         <>
-          <Script id="meta-pixel" strategy="afterInteractive">
+          <Script id="meta-pixel" strategy="lazyOnload">
             {`
               !function(f,b,e,v,n,t,s)
               {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
