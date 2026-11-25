@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ArrowDown, ArrowLeft, ArrowUp, ImagePlus, Trash2, UploadCloud } from "lucide-react";
 import { saveProduct } from "../actions";
 import { SubmitButton } from "../submit-button";
+import { slugify } from "@/lib/slug";
 import type { CategoryRecord, ProductRecord, UploadedProductImage } from "@/lib/catalog-types";
 
 type ImageDraft = UploadedProductImage & { url: string };
@@ -32,6 +33,22 @@ export default function ProductForm({
   const [images, setImages] = useState<ImageDraft[]>(initialImages);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [name, setName] = useState(product?.name ?? "");
+  const [slug, setSlug] = useState(product?.slug ?? "");
+  const [isSlugManual, setIsSlugManual] = useState(Boolean(product?.slug));
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    setName(val);
+    if (!isSlugManual) {
+      setSlug(slugify(val));
+    }
+  }
+
+  function handleSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setIsSlugManual(true);
+    setSlug(slugify(e.target.value));
+  }
 
   async function uploadFiles(files: FileList | null) {
     if (!files?.length) return;
@@ -90,10 +107,40 @@ export default function ProductForm({
         <section className="grid gap-5 border border-white/10 bg-[#080808] p-5 sm:grid-cols-2 sm:p-7">
           <h2 className="col-span-full text-lg font-light">Product details</h2>
           <label className={fieldClass()}>Product name *
-            <input name="name" required defaultValue={product?.name} placeholder="Modern stainless steel gate" className={inputClass()} />
+            <input
+              name="name"
+              required
+              value={name}
+              onChange={handleNameChange}
+              placeholder="Modern stainless steel gate"
+              className={inputClass()}
+            />
           </label>
-          <label className={fieldClass()}>URL slug *
-            <input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={product?.slug} placeholder="modern-stainless-steel-gate" className={inputClass()} />
+          <label className={fieldClass()}>
+            <div className="flex items-center justify-between">
+              <span>URL slug *</span>
+              {isSlugManual && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSlug(slugify(name));
+                    setIsSlugManual(false);
+                  }}
+                  className="text-[9px] font-normal lowercase tracking-normal text-textGold hover:underline"
+                >
+                  Auto-sync from name
+                </button>
+              )}
+            </div>
+            <input
+              name="slug"
+              required
+              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              value={slug}
+              onChange={handleSlugChange}
+              placeholder="modern-stainless-steel-gate"
+              className={inputClass()}
+            />
           </label>
           <label className={fieldClass()}>Category *
             <select name="category_id" required defaultValue={product?.category_id ?? ""} className={inputClass()}>

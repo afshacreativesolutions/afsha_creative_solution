@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ArrowLeft, ImagePlus, UploadCloud } from "lucide-react";
 import { saveBlogPost } from "../actions";
 import { SubmitButton } from "../submit-button";
+import { slugify } from "@/lib/slug";
 import type { BlogPostRecord } from "@/lib/catalog-types";
 
 function inputClass() {
@@ -20,6 +21,22 @@ export default function BlogForm({ post, saved }: { post?: BlogPostRecord; saved
   const [featuredImageUrl, setFeaturedImageUrl] = useState(post?.featured_image?.startsWith("http") ? post.featured_image : "");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [title, setTitle] = useState(post?.title ?? "");
+  const [slug, setSlug] = useState(post?.slug ?? "");
+  const [isSlugManual, setIsSlugManual] = useState(Boolean(post?.slug));
+
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    setTitle(val);
+    if (!isSlugManual) {
+      setSlug(slugify(val));
+    }
+  }
+
+  function handleSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setIsSlugManual(true);
+    setSlug(slugify(e.target.value));
+  }
 
   async function uploadFile(file: File) {
     setUploading(true);
@@ -64,10 +81,40 @@ export default function BlogForm({ post, saved }: { post?: BlogPostRecord; saved
           <section className="grid gap-5 border border-white/10 bg-[#080808] p-5 sm:grid-cols-2 sm:p-7">
             <h2 className="col-span-full text-lg font-light">Article details</h2>
             <label className={fieldClass()}>Title *
-              <input name="title" required defaultValue={post?.title} className={inputClass()} />
+              <input
+                name="title"
+                required
+                value={title}
+                onChange={handleTitleChange}
+                className={inputClass()}
+                placeholder="How to Choose the Perfect Modern Main Gate"
+              />
             </label>
-            <label className={fieldClass()}>URL slug *
-              <input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" defaultValue={post?.slug} className={inputClass()} />
+            <label className={fieldClass()}>
+              <div className="flex items-center justify-between">
+                <span>URL slug *</span>
+                {isSlugManual && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSlug(slugify(title));
+                      setIsSlugManual(false);
+                    }}
+                    className="text-[9px] font-normal lowercase tracking-normal text-textGold hover:underline"
+                  >
+                    Auto-sync from title
+                  </button>
+                )}
+              </div>
+              <input
+                name="slug"
+                required
+                pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+                value={slug}
+                onChange={handleSlugChange}
+                className={inputClass()}
+                placeholder="how-to-choose-the-perfect-modern-main-gate"
+              />
             </label>
             <label className={`${fieldClass()} sm:col-span-2`}>Excerpt
               <textarea name="excerpt" rows={2} defaultValue={post?.excerpt ?? ""} className={inputClass()} />
