@@ -7,8 +7,10 @@ import AdminNav from "./admin-nav";
 export const metadata = { title: "Admin Overview | Afsha Creative Solution" };
 
 export default async function AdminOverviewPage() {
-  await requireAdmin();
-  const stats = await getAdminOverviewStats();
+  const [, stats] = await Promise.all([
+    requireAdmin(),
+    getAdminOverviewStats(),
+  ]);
 
   const statusColors: Record<string, string> = {
     new: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",

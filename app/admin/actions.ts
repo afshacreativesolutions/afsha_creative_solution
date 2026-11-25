@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdminAction } from "@/lib/admin-auth";
+import { requireAdminAction, clearAdminSessionCache } from "@/lib/admin-auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { UploadedProductImage } from "@/lib/catalog-types";
 
@@ -33,22 +33,27 @@ export async function signIn(formData: FormData) {
 
   const email = value(formData, "email");
   const password = String(formData.get("password") ?? "");
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) redirect("/admin/login?error=invalid");
+  const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error || !authData.user) redirect("/admin/login?error=invalid");
 
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: admin } = user
-    ? await supabase.from("admin_users").select("user_id").eq("user_id", user.id).maybeSingle()
-    : { data: null };
+  const user = authData.user;
+  const { data: admin } = await supabase
+    .from("admin_users")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   if (!admin) {
     await supabase.auth.signOut();
     redirect("/admin/login?error=unauthorized");
   }
+
+  clearAdminSessionCache();
   redirect("/admin/products");
 }
 
 export async function signOut() {
+  clearAdminSessionCache();
   const supabase = await createSupabaseServerClient();
   await supabase?.auth.signOut();
   redirect("/admin/login");

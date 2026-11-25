@@ -13,9 +13,11 @@ type Props = {
 };
 
 export default async function AdminLeadDetailPage({ params }: Props) {
-  await requireAdmin();
   const { id } = await params;
-  const lead = await getAdminLeadById(id);
+  const [, lead] = await Promise.all([
+    requireAdmin(),
+    getAdminLeadById(id),
+  ]);
 
   if (!lead) notFound();
 

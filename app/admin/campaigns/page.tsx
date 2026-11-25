@@ -7,8 +7,10 @@ import AdminNav from "../admin-nav";
 export const metadata = { title: "Marketing Campaigns | Afsha Creative Solution" };
 
 export default async function AdminCampaignsPage() {
-  await requireAdmin();
-  const campaigns = await getAdminCampaigns();
+  const [, campaigns] = await Promise.all([
+    requireAdmin(),
+    getAdminCampaigns(),
+  ]);
 
   return (
     <main className="min-h-screen bg-[#080808] text-white">

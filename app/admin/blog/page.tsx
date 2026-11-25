@@ -7,14 +7,15 @@ import { SubmitButton } from "../submit-button";
 import { STATIC_BLOG_POSTS } from "@/lib/blog-data";
 
 export const metadata = { title: "Blog Admin | Afsha Creative Solution" };
+export const dynamic = "force-dynamic";
 
 export default async function AdminBlogPage({
   searchParams,
 }: {
   searchParams: Promise<{ saved?: string; deleted?: string; error?: string }>;
 }) {
-  await requireAdmin();
-  const [posts, query, tableStatus] = await Promise.all([
+  const [, posts, query, tableStatus] = await Promise.all([
+    requireAdmin(),
     getAdminBlogPosts(),
     searchParams,
     checkBlogTableStatus(),

@@ -12,10 +12,54 @@ import {
   LeadStatus,
 } from "./crm-types";
 
+let overviewStatsCache: {
+  data: {
+    totalLeads: number;
+    newLeadsThisWeek: number;
+    totalCustomers: number;
+    totalVisitors: number;
+    recentLeads: LeadRecord[];
+    leadsByStatus: Record<string, number>;
+    error: string | null;
+  };
+  expiresAt: number;
+} | null = null;
+
+export type AnalyticsRecentEvent = {
+  id: string;
+  created_at: string;
+  event_name: string;
+  page_url: string;
+  visitor_id: string;
+};
+
+let analyticsDataCache: {
+  data: {
+    visitorsCount: number;
+    sessionsCount: number;
+    eventsCount: number;
+    topPages: { path: string; count: number }[];
+    deviceBreakdown: Record<string, number>;
+    sourcesBreakdown: Record<string, number>;
+    recentEvents: AnalyticsRecentEvent[];
+  };
+  expiresAt: number;
+} | null = null;
+
+export function invalidateCrmCache() {
+  overviewStatsCache = null;
+  analyticsDataCache = null;
+}
+
 /**
  * Returns summary statistics for the Admin Overview dashboard.
  */
 export async function getAdminOverviewStats() {
+  const now = Date.now();
+  if (overviewStatsCache && overviewStatsCache.expiresAt > now) {
+    return overviewStatsCache.data;
+  }
+
   const supabase = (await createSupabaseServerClient()) || createSupabaseServiceClient();
   if (!supabase) {
     return {
@@ -39,7 +83,7 @@ export async function getAdminOverviewStats() {
       visitorsRes,
       recentLeadsRes,
     ] = await Promise.all([
-      supabase.from("leads").select("id, status, created_at"),
+      supabase.from("leads").select("id, status, created_at").limit(500),
       supabase.from("customers").select("id", { count: "exact", head: true }),
       supabase.from("visitors").select("visitor_id", { count: "exact", head: true }),
       supabase
@@ -87,7 +131,7 @@ export async function getAdminOverviewStats() {
       }
     });
 
-    return {
+    const result = {
       totalLeads,
       newLeadsThisWeek,
       totalCustomers: customersRes.count || 0,
@@ -96,6 +140,9 @@ export async function getAdminOverviewStats() {
       leadsByStatus,
       error: null,
     };
+
+    overviewStatsCache = { data: result, expiresAt: now + 30_000 };
+    return result;
   } catch (err) {
     console.warn("getAdminOverviewStats exception:", err);
     return {
@@ -154,7 +201,7 @@ export async function getAdminLeads(options?: {
       query = query.eq("status", options.status);
     }
 
-    const { data, error } = await query;
+    const { data, error } = await query.limit(100);
     if (error) {
       console.warn("getAdminLeads error:", error.message);
       return [];
@@ -221,7 +268,7 @@ export async function getAdminCustomers(search?: string): Promise<CustomerRecord
       query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`);
     }
 
-    const { data, error } = await query;
+    const { data, error } = await query.limit(100);
     if (error) {
       console.warn("getAdminCustomers error:", error.message);
       return [];
@@ -264,6 +311,11 @@ export async function getAdminCustomerById(id: string) {
  * Returns analytics intelligence data.
  */
 export async function getAdminAnalyticsData() {
+  const now = Date.now();
+  if (analyticsDataCache && analyticsDataCache.expiresAt > now) {
+    return analyticsDataCache.data;
+  }
+
   const supabase = (await createSupabaseServerClient()) || createSupabaseServiceClient();
   if (!supabase) {
     return {
@@ -326,15 +378,18 @@ export async function getAdminAnalyticsData() {
       .slice(0, 8)
       .map(([path, count]) => ({ path, count }));
 
-    return {
+    const result = {
       visitorsCount: visitors.length,
       sessionsCount: sessions.length,
       eventsCount: events.length,
       topPages,
       deviceBreakdown,
       sourcesBreakdown,
-      recentEvents: recentEventsRes.data || [],
+      recentEvents: (recentEventsRes.data || []) as unknown as AnalyticsRecentEvent[],
     };
+
+    analyticsDataCache = { data: result, expiresAt: now + 60_000 };
+    return result;
   } catch (err) {
     console.warn("getAdminAnalyticsData exception:", err);
     return {

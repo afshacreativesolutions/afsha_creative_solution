@@ -6,6 +6,16 @@ export async function refreshSupabaseSession(request: NextRequest) {
   const config = getSupabaseConfig();
   if (!config) return NextResponse.next({ request });
 
+  // Fast-path: If the request contains no Supabase auth token cookies,
+  // skip creating the Supabase SSR client and calling auth methods.
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
+
+  if (!hasAuthCookie) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
   const supabase = createServerClient(config.url, config.anonKey, {
     cookies: {
@@ -22,6 +32,7 @@ export async function refreshSupabaseSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getClaims();
+  // Verify and refresh session tokens if expired
+  await supabase.auth.getUser();
   return response;
 }

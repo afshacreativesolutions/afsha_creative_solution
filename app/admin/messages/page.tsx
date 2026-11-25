@@ -6,8 +6,10 @@ import AdminNav from "../admin-nav";
 export const metadata = { title: "Communications Audit Logs | Afsha Creative Solution" };
 
 export default async function AdminMessagesPage() {
-  await requireAdmin();
-  const logs = await getAdminMessageLogs(100);
+  const [, logs] = await Promise.all([
+    requireAdmin(),
+    getAdminMessageLogs(100),
+  ]);
 
   return (
     <main className="min-h-screen bg-[#080808] text-white">

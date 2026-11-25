@@ -12,12 +12,14 @@ type Props = {
 };
 
 export default async function AdminLeadsPage({ searchParams }: Props) {
-  await requireAdmin();
   const params = await searchParams;
   const status = params.status || "all";
   const search = params.search || "";
 
-  const leads = await getAdminLeads({ status, search });
+  const [, leads] = await Promise.all([
+    requireAdmin(),
+    getAdminLeads({ status, search }),
+  ]);
 
   const statusColors: Record<string, string> = {
     new: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",

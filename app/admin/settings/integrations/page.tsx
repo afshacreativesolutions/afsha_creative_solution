@@ -6,8 +6,10 @@ import AdminNav from "../../admin-nav";
 export const metadata = { title: "Integrations & Diagnostic | Afsha Creative Solution" };
 
 export default async function AdminIntegrationsPage() {
-  await requireAdmin();
-  const integrations = await getAdminIntegrationsStatus();
+  const [, integrations] = await Promise.all([
+    requireAdmin(),
+    getAdminIntegrationsStatus(),
+  ]);
 
   return (
     <main className="min-h-screen bg-[#080808] text-white">

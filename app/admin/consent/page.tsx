@@ -6,8 +6,10 @@ import AdminNav from "../admin-nav";
 export const metadata = { title: "Privacy & Consent Audit | Afsha Creative Solution" };
 
 export default async function AdminConsentPage() {
-  await requireAdmin();
-  const records = await getAdminConsentRecords(100);
+  const [, records] = await Promise.all([
+    requireAdmin(),
+    getAdminConsentRecords(100),
+  ]);
 
   return (
     <main className="min-h-screen bg-[#080808] text-white">

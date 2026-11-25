@@ -9,8 +9,10 @@ import AdminProductTable from "./product-table";
 export const metadata = { title: "Products Admin | Afsha Creative Solution" };
 
 export default async function AdminProductsPage() {
-  await requireAdmin();
-  const products = await getAdminProducts();
+  const [, products] = await Promise.all([
+    requireAdmin(),
+    getAdminProducts(),
+  ]);
   const configured = Boolean(getSupabaseConfig());
 
   return <main className="min-h-[75vh] bg-background text-white">

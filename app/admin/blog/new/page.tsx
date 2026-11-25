@@ -7,7 +7,6 @@ export const metadata = { title: "New Article | Afsha Creative Solution" };
 
 export default async function NewBlogPage() {
   await requireAdmin();
-  await getAdminCategories();
   return (
     <main className="min-h-[75vh] bg-background text-white">
       <AdminNav />

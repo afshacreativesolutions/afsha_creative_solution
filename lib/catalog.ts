@@ -26,22 +26,41 @@ function normalizeProduct(row: Record<string, unknown>): ProductRecord {
   } as ProductRecord;
 }
 
+const signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function withSignedImages(supabase: any, products: ProductRecord[]): Promise<ProductRecord[]> {
   if (!supabase) return products;
-  const paths = [...new Set(products.flatMap((product) => product.images.map((image) => image.storage_path)))];
-  if (!paths.length) return products;
-  // WhatsApp quote messages include these URLs, so give recipients time to open
-  // the image after it has been shared.
-  const { data, error } = await supabase.storage.from("product-images").createSignedUrls(paths, 7 * 24 * 60 * 60);
-  if (error) {
-    console.error("Could not create signed product image URLs:", error.message);
-    return products;
+  const now = Date.now();
+  const allPaths = [...new Set(products.flatMap((product) => product.images.map((image) => image.storage_path)))];
+  if (!allPaths.length) return products;
+
+  // Only request signed URLs for paths not already cached or expiring within 2 hours
+  const missingPaths = allPaths.filter((path) => {
+    const cached = signedUrlCache.get(path);
+    return !cached || cached.expiresAt <= now + 2 * 3600 * 1000;
+  });
+
+  if (missingPaths.length > 0) {
+    const { data, error } = await supabase.storage.from("product-images").createSignedUrls(missingPaths, 7 * 24 * 60 * 60);
+    if (error) {
+      console.error("Could not create signed product image URLs:", error.message);
+    } else if (data) {
+      const expiresAt = now + 6 * 24 * 3600 * 1000; // Cache for 6 days
+      for (const item of data) {
+        if (item.path && item.signedUrl) {
+          signedUrlCache.set(item.path, { url: item.signedUrl, expiresAt });
+        }
+      }
+    }
   }
-  const urls = new Map<string, string>((data ?? []).map((item: { path: string; signedUrl: string }) => [item.path, item.signedUrl]));
+
   return products.map((product) => ({
     ...product,
-    images: product.images.map((image) => ({ ...image, url: urls.get(image.storage_path) || "" })),
+    images: product.images.map((image) => ({
+      ...image,
+      url: signedUrlCache.get(image.storage_path)?.url || "",
+    })),
   }));
 }
 
@@ -140,12 +159,23 @@ export async function getAdminProduct(id: string): Promise<ProductRecord | null>
   return product;
 }
 
+const blogSignedUrlCache = new Map<string, { url: string; expiresAt: number }>();
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function withSignedBlogImage(supabase: any, post: BlogPostRecord): Promise<BlogPostRecord> {
   const image = post.featured_image;
   if (!image || image.startsWith("http") || image.startsWith("/")) return post;
+
+  const now = Date.now();
+  const cached = blogSignedUrlCache.get(image);
+  if (cached && cached.expiresAt > now + 2 * 3600 * 1000) {
+    return { ...post, featured_image: cached.url };
+  }
+
   const { data, error } = await supabase.storage.from("blog-images").createSignedUrl(image, 7 * 24 * 60 * 60);
   if (error || !data?.signedUrl) return post;
+
+  blogSignedUrlCache.set(image, { url: data.signedUrl, expiresAt: now + 6 * 24 * 3600 * 1000 });
   return { ...post, featured_image: data.signedUrl };
 }
 
@@ -207,7 +237,10 @@ export async function getAdminBlogPosts(): Promise<BlogPostRecord[]> {
     }
     const posts = (data ?? []) as BlogPostRecord[];
     return Promise.all(posts.map((post) => withSignedBlogImage(supabase, post)));
-  } catch (err) {
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "digest" in err && (err as { digest: string }).digest === "DYNAMIC_SERVER_USAGE") {
+      throw err;
+    }
     console.warn("Error in getAdminBlogPosts:", err);
     return [];
   }

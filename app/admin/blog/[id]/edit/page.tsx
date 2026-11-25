@@ -9,9 +9,11 @@ type EditPageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ 
 export const metadata = { title: "Edit Article | Afsha Creative Solution" };
 
 export default async function EditBlogPage({ params, searchParams }: EditPageProps) {
-  await requireAdmin();
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const post = await getAdminBlogPost(id);
+  const [, post] = await Promise.all([
+    requireAdmin(),
+    getAdminBlogPost(id),
+  ]);
   if (!post) notFound();
   return (
     <main className="min-h-[75vh] bg-background text-white">

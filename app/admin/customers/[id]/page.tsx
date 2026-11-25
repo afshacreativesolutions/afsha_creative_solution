@@ -12,9 +12,11 @@ type Props = {
 };
 
 export default async function AdminCustomerDetailPage({ params }: Props) {
-  await requireAdmin();
   const { id } = await params;
-  const data = await getAdminCustomerById(id);
+  const [, data] = await Promise.all([
+    requireAdmin(),
+    getAdminCustomerById(id),
+  ]);
 
   if (!data || !data.customer) notFound();
 

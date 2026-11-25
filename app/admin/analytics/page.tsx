@@ -7,8 +7,10 @@ import AdminNav from "../admin-nav";
 export const metadata = { title: "Traffic & Attribution Analytics | Afsha Creative Solution" };
 
 export default async function AdminAnalyticsPage() {
-  await requireAdmin();
-  const data = await getAdminAnalyticsData();
+  const [, data] = await Promise.all([
+    requireAdmin(),
+    getAdminAnalyticsData(),
+  ]);
 
   return (
     <main className="min-h-screen bg-[#080808] text-white">

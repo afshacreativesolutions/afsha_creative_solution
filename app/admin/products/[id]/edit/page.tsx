@@ -9,9 +9,12 @@ export const metadata: Metadata = { title: "Edit Product | Afsha Creative Soluti
 type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> };
 
 export default async function EditProductPage({ params, searchParams }: PageProps) {
-  await requireAdmin();
   const [{ id }, { saved }] = await Promise.all([params, searchParams]);
-  const [product, categories] = await Promise.all([getAdminProduct(id), getAdminCategories()]);
+  const [, product, categories] = await Promise.all([
+    requireAdmin(),
+    getAdminProduct(id),
+    getAdminCategories(),
+  ]);
   if (!product) notFound();
   const initialImages = product.images.map((image) => ({
     storage_path: image.storage_path,

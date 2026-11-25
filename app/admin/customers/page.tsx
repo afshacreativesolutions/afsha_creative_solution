@@ -12,10 +12,12 @@ type Props = {
 };
 
 export default async function AdminCustomersPage({ searchParams }: Props) {
-  await requireAdmin();
   const params = await searchParams;
   const search = params.search || "";
-  const customers = await getAdminCustomers(search);
+  const [, customers] = await Promise.all([
+    requireAdmin(),
+    getAdminCustomers(search),
+  ]);
 
   const stageColors: Record<string, string> = {
     lead: "bg-blue-500/10 text-blue-400 border-blue-500/30",
