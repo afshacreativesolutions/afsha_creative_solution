@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ArrowDown, ArrowLeft, ArrowUp, ImagePlus, Trash2, UploadCloud } from "lucide-react";
 import { saveProduct } from "../actions";
+import { SubmitButton } from "../submit-button";
 import type { CategoryRecord, ProductRecord, UploadedProductImage } from "@/lib/catalog-types";
 
 type ImageDraft = UploadedProductImage & { url: string };
@@ -73,7 +74,14 @@ export default function ProductForm({
       <Link href="/admin/products" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-white/50 hover:text-white"><ArrowLeft size={14} /> Products</Link>
       <div className="flex items-center gap-3">
         {saved && <span role="status" className="text-xs text-emerald-300">Changes saved</span>}
-        <button type="submit" disabled={uploading || categories.length === 0} className="border border-textGold/60 bg-textGold px-5 py-3 text-[10px] uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-textGold disabled:cursor-not-allowed disabled:opacity-40">Save product</button>
+        <SubmitButton
+          type="submit"
+          disabled={uploading || categories.length === 0}
+          loadingText="Saving product..."
+          className="border border-textGold/60 bg-textGold px-5 py-3 text-[10px] uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-textGold disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Save product
+        </SubmitButton>
       </div>
     </div>
 
@@ -181,6 +189,15 @@ export default function ProductForm({
         </section>
       </aside>
     </div>
-    <div className="flex justify-end border-t border-white/10 pt-5"><button type="submit" disabled={!categories.some((category) => category.is_active || category.id === product?.category_id) || uploading} className="border border-textGold/60 bg-textGold px-6 py-3 text-[10px] uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-textGold disabled:cursor-not-allowed disabled:opacity-40">Save product</button></div>
+    <div className="flex justify-end border-t border-white/10 pt-5">
+      <SubmitButton
+        type="submit"
+        disabled={!categories.some((category) => category.is_active || category.id === product?.category_id) || uploading}
+        loadingText="Saving product..."
+        className="border border-textGold/60 bg-textGold px-6 py-3 text-[10px] uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-textGold disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        Save product
+      </SubmitButton>
+    </div>
   </form>;
 }

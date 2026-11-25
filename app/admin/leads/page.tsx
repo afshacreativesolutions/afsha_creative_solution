@@ -3,6 +3,7 @@ import { ArrowRight, Filter, Search } from "lucide-react";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAdminLeads } from "@/lib/crm";
 import AdminNav from "../admin-nav";
+import { SubmitButton } from "../submit-button";
 
 export const metadata = { title: "Leads Pipeline | Afsha Creative Solution" };
 
@@ -91,12 +92,12 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
               />
               <Search size={14} className="absolute left-2.5 top-2.5 text-white/40" />
             </div>
-            <button
-              type="submit"
-              className="min-h-9 rounded-md border border-white/20 bg-white/5 px-3 text-[10px] uppercase tracking-[0.14em] text-white hover:bg-white/10"
+            <SubmitButton
+              loadingText="Filtering..."
+              className="min-h-9 rounded-md border border-white/20 bg-white/5 px-3 text-[10px] uppercase tracking-[0.14em] text-white hover:bg-white/10 disabled:opacity-40"
             >
               Filter
-            </button>
+            </SubmitButton>
           </form>
         </div>
 

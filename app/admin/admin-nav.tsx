@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signOut } from "./actions";
+import { SubmitButton } from "./submit-button";
 
 export default function AdminNav() {
   return (
@@ -53,9 +54,12 @@ export default function AdminNav() {
           View site
         </Link>
         <form action={signOut} className="shrink-0">
-          <button className="min-h-10 py-3 hover:text-textGold" type="submit">
+          <SubmitButton
+            loadingText="Signing out..."
+            className="min-h-10 py-3 hover:text-textGold transition-colors disabled:opacity-40"
+          >
             Sign out
-          </button>
+          </SubmitButton>
         </form>
       </nav>
     </div>

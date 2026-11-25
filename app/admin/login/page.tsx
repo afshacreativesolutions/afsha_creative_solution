@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSupabaseConfig } from "@/lib/supabase/env";
 import { getAdminSession } from "@/lib/admin-auth";
 import { signIn } from "../actions";
+import { SubmitButton } from "../submit-button";
 
 export const metadata: Metadata = { title: "Admin Sign In | Afsha Creative Solution" };
 
@@ -34,7 +35,13 @@ export default async function AdminLoginPage({ searchParams }: LoginProps) {
           <label className="block text-[10px] uppercase tracking-[0.16em] text-white/55">Password
             <input name="password" type="password" autoComplete="current-password" required className="mt-2 w-full border border-white/15 bg-black px-3 py-3 text-sm normal-case tracking-normal text-white outline-none focus:border-textGold" />
           </label>
-          <button disabled={!configured} className="w-full border border-textGold/60 bg-textGold px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-textGold disabled:cursor-not-allowed disabled:opacity-40">Sign in</button>
+          <SubmitButton
+            disabled={!configured}
+            loadingText="Signing in..."
+            className="w-full border border-textGold/60 bg-textGold px-5 py-3 text-[10px] uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-textGold disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Sign in
+          </SubmitButton>
         </form>
       </div>
     </main>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, ImagePlus, UploadCloud } from "lucide-react";
 import { saveBlogPost } from "../actions";
+import { SubmitButton } from "../submit-button";
 import type { BlogPostRecord } from "@/lib/catalog-types";
 
 function inputClass() {
@@ -47,7 +48,14 @@ export default function BlogForm({ post, saved }: { post?: BlogPostRecord; saved
         <Link href="/admin/blog" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-white/50 hover:text-white"><ArrowLeft size={14} /> Articles</Link>
         <div className="flex items-center gap-3">
           {saved && <span role="status" className="text-xs text-emerald-300">Changes saved</span>}
-          <button type="submit" disabled={uploading} className="border border-textGold/60 bg-textGold px-5 py-3 text-[10px] uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-textGold disabled:cursor-not-allowed disabled:opacity-40">Save article</button>
+          <SubmitButton
+            type="submit"
+            disabled={uploading}
+            loadingText="Saving article..."
+            className="border border-textGold/60 bg-textGold px-5 py-3 text-[10px] uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-textGold disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Save article
+          </SubmitButton>
         </div>
       </div>
 
@@ -123,7 +131,14 @@ export default function BlogForm({ post, saved }: { post?: BlogPostRecord; saved
         </aside>
       </div>
       <div className="flex justify-end border-t border-white/10 pt-5">
-        <button type="submit" disabled={uploading} className="border border-textGold/60 bg-textGold px-6 py-3 text-[10px] uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-textGold disabled:cursor-not-allowed disabled:opacity-40">Save article</button>
+        <SubmitButton
+          type="submit"
+          disabled={uploading}
+          loadingText="Saving article..."
+          className="border border-textGold/60 bg-textGold px-6 py-3 text-[10px] uppercase tracking-[0.16em] text-black transition-colors hover:bg-transparent hover:text-textGold disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Save article
+        </SubmitButton>
       </div>
     </form>
   );

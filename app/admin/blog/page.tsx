@@ -3,6 +3,7 @@ import { AlertCircle, Plus } from "lucide-react";
 import { requireAdmin } from "@/lib/admin-auth";
 import { checkBlogTableStatus, getAdminBlogPosts } from "@/lib/catalog";
 import AdminNav from "../admin-nav";
+import { SubmitButton } from "../submit-button";
 import { STATIC_BLOG_POSTS } from "@/lib/blog-data";
 
 export const metadata = { title: "Blog Admin | Afsha Creative Solution" };
@@ -80,7 +81,7 @@ export default async function AdminBlogPage({
                   <Link href={`/admin/blog/${post.id}/edit`} className="text-xs text-textGold hover:underline">Edit</Link>
                   <form action={async (formData) => { "use server"; const { deleteBlogPost } = await import("../actions"); await deleteBlogPost(formData); }}>
                     <input type="hidden" name="id" value={post.id} />
-                    <button className="text-xs text-white/45 hover:text-red-300" type="submit">Delete</button>
+                    <SubmitButton loadingText="Deleting..." className="text-xs text-white/45 hover:text-red-300 disabled:opacity-40">Delete</SubmitButton>
                   </form>
                 </div>
               </div>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { deleteProduct } from "../actions";
+import { SubmitButton } from "../submit-button";
 import type { ProductRecord } from "@/lib/catalog-types";
 
 export default function AdminProductTable({ products }: { products: ProductRecord[] }) {
@@ -30,7 +31,7 @@ export default function AdminProductTable({ products }: { products: ProductRecor
             <td className="px-4 py-3 text-sm text-white/55">{product.category?.name}</td>
             <td className="px-4 py-3 text-sm text-white/55">{product.images.length}</td>
             <td className="px-4 py-3"><span className={`border px-2 py-1 text-[9px] uppercase tracking-[0.14em] ${product.is_published ? "border-emerald-900 text-emerald-300" : "border-white/15 text-white/45"}`}>{product.is_published ? "Published" : "Draft"}</span></td>
-            <td className="px-4 py-3"><div className="flex justify-end gap-4 text-xs"><Link href={`/admin/products/${product.id}/edit`} className="text-textGold hover:text-white">Edit</Link><form action={deleteProduct} onSubmit={(event) => { if (!window.confirm(`Permanently remove “${product.name}” and its images?`)) event.preventDefault(); }}><input type="hidden" name="id" value={product.id} /><button type="submit" className="text-red-300/80 hover:text-red-200">Delete</button></form></div></td>
+            <td className="px-4 py-3"><div className="flex justify-end gap-4 text-xs"><Link href={`/admin/products/${product.id}/edit`} className="text-textGold hover:text-white">Edit</Link><form action={deleteProduct} onSubmit={(event) => { if (!window.confirm(`Permanently remove “${product.name}” and its images?`)) event.preventDefault(); }}><input type="hidden" name="id" value={product.id} /><SubmitButton loadingText="Deleting..." className="text-red-300/80 hover:text-red-200 disabled:opacity-40">Delete</SubmitButton></form></div></td>
           </tr>;
         })}</tbody>
       </table>
