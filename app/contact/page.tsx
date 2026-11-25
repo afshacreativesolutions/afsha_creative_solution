@@ -19,7 +19,7 @@ const contactMethods = [
     href: "https://wa.me/919634776691?text=Hello%20Afsha%20Creative%20Solution%2C%20I%20would%20like%20to%20discuss%20a%20custom%20metalwork%20project.",
     icon: MessageCircle,
   },
-  { label: "Call", value: "+91 96247 76691", href: "tel:+919624776691", icon: Phone },
+  { label: "Call", value: "+91 96347 76691", href: "tel:+919634776691", icon: Phone },
   { label: "Email", value: "afshacreativesolutions@gmail.com", href: "mailto:afshacreativesolutions@gmail.com", icon: Mail },
 ];
 

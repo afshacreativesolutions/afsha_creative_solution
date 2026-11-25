@@ -93,7 +93,7 @@ export default function MetalGateManufacturersMoradabadPage() {
           "@type": "LocalBusiness",
           name: "Afsha Creative Solutions - Custom Metal Gate Manufacturers",
           image: absoluteUrl("/videos/hero-poster.webp"),
-          telephone: "+91-9624776691",
+          telephone: "+91-9634776691",
           email: "afshacreativesolutions@gmail.com",
           address: {
             "@type": "PostalAddress",
@@ -282,8 +282,8 @@ export default function MetalGateManufacturersMoradabadPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Phone size={18} className="shrink-0 text-textGold" />
-                  <a href="tel:+919624776691" className="hover:text-textGold transition">
-                    +91 96247 76691 / 96347 76691
+                  <a href="tel:+919634776691" className="hover:text-textGold transition">
+                    +91 96347 76691
                   </a>
                 </div>
               </div>

@@ -178,10 +178,10 @@ export default function FAQPage() {
               <MessageCircle size={16} /> Chat on WhatsApp
             </a>
             <a
-              href="tel:+919624776691"
+              href="tel:+919634776691"
               className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/20 px-6 text-[10px] uppercase tracking-[0.18em] text-white transition hover:border-textGold hover:text-textGold"
             >
-              <Phone size={15} /> Call +91 96247 76691
+              <Phone size={15} /> Call +91 96347 76691
             </a>
           </div>
         </div>

@@ -49,6 +49,6 @@ Track these events in GA4/GTM:
 
 - Name: Afsha Creative Solution
 - Address: Harthala, Lodhipur, Moradabad, Uttar Pradesh 244001
-- Phone: +91 96247 76691
+- Phone: +91 96347 76691
 - Email: afshacreativesolutions@gmail.com
 - Website: https://afshacreative.in/

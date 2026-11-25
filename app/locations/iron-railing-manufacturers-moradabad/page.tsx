@@ -93,7 +93,7 @@ export default function IronRailingManufacturersMoradabadPage() {
           "@type": "LocalBusiness",
           name: "Afsha Creative Solutions - Iron Railing Manufacturers",
           image: absoluteUrl("/videos/hero-poster.webp"),
-          telephone: "+91-9624776691",
+          telephone: "+91-9634776691",
           email: "afshacreativesolutions@gmail.com",
           address: {
             "@type": "PostalAddress",
