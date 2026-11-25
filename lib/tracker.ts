@@ -116,6 +116,10 @@ export async function trackEvent(
       w.fbq("track", "Lead", properties);
     } else if (eventName === "product_view") {
       w.fbq("track", "ViewContent", properties);
+    } else if (eventName === "page_view") {
+      w.fbq("track", "PageView");
+    } else if (eventName === "whatsapp_click" || eventName === "phone_click") {
+      w.fbq("track", "Contact", properties);
     } else {
       w.fbq("trackCustom", eventName, properties);
     }

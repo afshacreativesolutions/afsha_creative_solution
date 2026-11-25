@@ -113,5 +113,8 @@ export function applyGoogleConsent(categories: ConsentCategories) {
 
   if (typeof w.fbq === "function") {
     w.fbq("consent", categories.advertising ? "grant" : "revoke");
+    if (categories.advertising) {
+      w.fbq("track", "PageView");
+    }
   }
 }
