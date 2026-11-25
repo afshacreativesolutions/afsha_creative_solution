@@ -424,7 +424,8 @@ export async function getAdminIntegrationsStatus() {
     process.env.WHATSAPP_PHONE_NUMBER_ID && process.env.WHATSAPP_ACCESS_TOKEN
   );
   const ga4Configured = Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
-  const metaPixelConfigured = Boolean(process.env.NEXT_PUBLIC_META_PIXEL_ID);
+  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "1790160535434214";
+  const metaPixelConfigured = Boolean(pixelId);
   const gtmConfigured = Boolean(process.env.NEXT_PUBLIC_GTM_ID);
   const googleAdsConfigured = Boolean(process.env.NEXT_PUBLIC_GOOGLE_ADS_ID);
 
@@ -463,7 +464,7 @@ export async function getAdminIntegrationsStatus() {
       name: "Meta Pixel & Conversion API",
       configured: metaPixelConfigured,
       details: metaPixelConfigured
-        ? `Active (${process.env.NEXT_PUBLIC_META_PIXEL_ID}) with Consent Revocation Guard`
+        ? `Active (${pixelId})`
         : "NEXT_PUBLIC_META_PIXEL_ID not set",
     },
     gtm: {

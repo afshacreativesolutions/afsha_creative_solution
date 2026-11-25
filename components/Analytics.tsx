@@ -2,9 +2,9 @@
 
 import Script from "next/script";
 
-const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
-const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-E6KH865KY2";
+const gtmId = process.env.NEXT_PUBLIC_GTM_ID || "GTM-MXCFXXJR";
+const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "1790160535434214";
 const googleAdsId = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
 
 export default function Analytics() {
@@ -74,7 +74,7 @@ export default function Analytics() {
         </Script>
       )}
 
-      {/* 5. Meta Pixel (if configured) */}
+      {/* 5. Meta Pixel */}
       {metaPixelId && (
         <>
           <Script id="meta-pixel" strategy="afterInteractive">
@@ -87,22 +87,8 @@ export default function Analytics() {
               t.src=v;s=b.getElementsByTagName(e)[0];
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
-              try {
-                var cMatch = document.cookie.match(/(?:^|; )afsha_cookie_consent=([^;]*)/);
-                if (cMatch) {
-                  var cData = JSON.parse(decodeURIComponent(cMatch[1]));
-                  if (cData && cData.categories && cData.categories.advertising) {
-                    fbq('consent', 'grant');
-                  } else {
-                    fbq('consent', 'revoke');
-                  }
-                } else {
-                  fbq('consent', 'revoke');
-                }
-              } catch(e) {
-                fbq('consent', 'revoke');
-              }
               fbq('init', '${metaPixelId}');
+              fbq('track', 'PageView');
             `}
           </Script>
           <noscript>
