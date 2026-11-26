@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getPublicProduct, getPublicProducts } from "@/lib/catalog";
+import { getPublishedCmsSiteSettings } from "@/lib/cms/queries";
 import type { ProductRecord } from "@/lib/catalog-types";
 import { absoluteUrl, canonicalUrl, SITE_NAME, buildWhatsAppQuoteUrl } from "@/lib/site-config";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -87,10 +88,14 @@ function relatedImage(product: ProductRecord) {
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = await getPublicProduct(slug);
+  const [product, siteSettings, allProducts] = await Promise.all([
+    getPublicProduct(slug),
+    getPublishedCmsSiteSettings(),
+    getPublicProducts(),
+  ]);
   if (!product) notFound();
 
-  const allProducts = await getPublicProducts();
+  const tpl = siteSettings.template_defaults.productDetail;
   const relatedProducts = allProducts
     .filter((item) => item.category_id === product.category_id && item.id !== product.id)
     .slice(0, 4);
@@ -103,7 +108,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   const gallery = product.images;
   const specs = Object.entries(product.specifications ?? {});
-  const primaryImage = gallery.find((item) => item.is_primary) ?? gallery[0];
 
   const productSchema = {
     "@context": "https://schema.org",
@@ -144,7 +148,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           href="/products"
           className="mb-4 inline-flex min-h-11 items-center gap-3 text-[10px] uppercase tracking-[0.16em] text-white/50 transition-colors hover:text-textGold sm:mb-6 sm:tracking-[0.2em]"
         >
-          <ArrowLeft size={14} /> All products
+          <ArrowLeft size={14} /> {tpl.backLabel}
         </Link>
 
         <div className="grid min-w-0 gap-4 sm:gap-7 lg:grid-cols-[1fr_0.82fr] lg:items-end">
@@ -182,9 +186,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         <div className="mb-5 flex items-end justify-between gap-4 border-b border-white/10 pb-3 sm:mb-7 sm:pb-5">
           <div>
             <p className="mb-2 text-[10px] uppercase tracking-[0.24em] text-textGold">
-              Design references
+              {tpl.designsEyebrow}
             </p>
-            <h2 className="text-2xl font-light sm:text-3xl">Explore the collection</h2>
+            <h2 className="text-2xl font-light sm:text-3xl">{tpl.designsHeading}</h2>
           </div>
           <span className="text-[10px] uppercase tracking-[0.16em] text-white/40">
             {gallery.length} designs
@@ -256,9 +260,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           {product.description && (
             <div className="max-w-4xl border-t border-white/10 py-6 sm:py-8">
               <p className="mb-2 text-[10px] uppercase tracking-[0.22em] text-textGold">
-                About this design
+                {tpl.aboutEyebrow}
               </p>
-              <h2 className="mb-3 text-2xl font-light sm:text-3xl">Product details</h2>
+              <h2 className="mb-3 text-2xl font-light sm:text-3xl">{tpl.aboutHeading}</h2>
               <p className="text-sm leading-7 text-white/60">{product.description}</p>
             </div>
           )}
@@ -321,15 +325,15 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <div className="mb-8 flex items-end justify-between">
               <div>
                 <p className="mb-2 text-[10px] uppercase tracking-[0.24em] text-textGold">
-                  Keep exploring
+                  {tpl.relatedEyebrow}
                 </p>
-                <h2 className="text-2xl font-light sm:text-3xl">Related products</h2>
+                <h2 className="text-2xl font-light sm:text-3xl">{tpl.relatedHeading}</h2>
               </div>
               <Link
                 href="/products"
                 className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-white/50 transition-colors hover:text-textGold"
               >
-                All products <ArrowRight size={14} />
+                {tpl.backLabel} <ArrowRight size={14} />
               </Link>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">

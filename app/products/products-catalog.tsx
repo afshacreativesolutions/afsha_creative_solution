@@ -23,7 +23,8 @@ function filterToken(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-const whatsappHref = "https://wa.me/919634776691?text=Hello%20Afsha%20Creative%20Solution%2C%20I%20would%20like%20a%20quote%20for%20a%20custom%20metalwork%20product.";
+const whatsappHref =
+  "https://wa.me/919634776691?text=Hello%20Afsha%20Creative%20Solution%2C%20I%20would%20like%20a%20quote%20for%20a%20custom%20metalwork%20product.";
 
 export default function ProductsCatalog({
   products,
@@ -31,38 +32,198 @@ export default function ProductsCatalog({
   initialCategory,
   initialMaterial,
   isConfigured,
+  embeddedInCms = false,
+  sectionEyebrow = "The collection",
+  sectionHeading = "Designed for the way you live.",
+  sectionDescription = "Every piece begins with a conversation, then takes shape around your architecture.",
+  emptyTitle,
+  emptyDescription,
 }: {
   products: CatalogProduct[];
   categories: CatalogCategory[];
   initialCategory: string;
   initialMaterial: string;
   isConfigured: boolean;
+  embeddedInCms?: boolean;
+  sectionEyebrow?: string;
+  sectionHeading?: string;
+  sectionDescription?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }) {
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [activeMaterial, setActiveMaterial] = useState(initialMaterial);
-  const materials = useMemo(() => [...new Set(products.flatMap((product) => product.materials))].sort(), [products]);
+  const materials = useMemo(
+    () => [...new Set(products.flatMap((product) => product.materials))].sort(),
+    [products]
+  );
   const categoryOptions = [
     { slug: "all", name: "All work" },
-    ...(categories.some((category) => category.slug === "railings") ? [] : [{ slug: "railings", name: "Railings" }]),
+    ...(categories.some((category) => category.slug === "railings")
+      ? []
+      : [{ slug: "railings", name: "Railings" }]),
     ...categories.map(({ slug, name }) => ({ slug, name })),
   ];
   const filteredProducts = useMemo(
-    () => products.filter((product) => {
-      const matchesCategory = activeCategory === "all"
-        || (activeCategory === "railings"
-          ? !product.categorySlug.toLowerCase().includes("gate") && !product.category.toLowerCase().includes("gate")
-          : product.categorySlug === activeCategory);
-      const matchesMaterial = activeMaterial === "all"
-        || product.materials.some((material) => filterToken(material) === activeMaterial);
-      return matchesCategory && matchesMaterial;
-    }),
-    [activeCategory, activeMaterial, products],
+    () =>
+      products.filter((product) => {
+        const matchesCategory =
+          activeCategory === "all" ||
+          (activeCategory === "railings"
+            ? !product.categorySlug.toLowerCase().includes("gate") &&
+              !product.category.toLowerCase().includes("gate")
+            : product.categorySlug === activeCategory);
+        const matchesMaterial =
+          activeMaterial === "all" ||
+          product.materials.some((material) => filterToken(material) === activeMaterial);
+        return matchesCategory && matchesMaterial;
+      }),
+    [activeCategory, activeMaterial, products]
   );
+
+  const collectionSection = (
+    <section
+      id="collection"
+      className="mx-auto max-w-7xl scroll-mt-20 px-4 pb-12 pt-8 sm:px-6 sm:pb-20 sm:pt-12 lg:pt-14"
+    >
+      <div className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-5 sm:mb-8 sm:gap-6 sm:pb-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="mb-3 text-[10px] uppercase tracking-[0.25em] text-textGold">
+            {sectionEyebrow}
+          </p>
+          <h2 className="text-2xl font-light tracking-tight sm:text-4xl">
+            {sectionHeading}
+          </h2>
+        </div>
+        <p className="max-w-sm text-sm leading-6 text-white/50">{sectionDescription}</p>
+      </div>
+
+      {categories.length > 0 && (
+        <div
+          className="scrollbar-none mb-8 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          aria-label="Filter products by category"
+        >
+          {categoryOptions.map((category) => (
+            <button
+              type="button"
+              key={category.slug}
+              aria-pressed={activeCategory === category.slug}
+              onClick={() => setActiveCategory(category.slug)}
+              className={`shrink-0 rounded-full border px-4 py-2.5 text-[10px] uppercase tracking-[0.13em] transition-colors ${
+                activeCategory === category.slug
+                  ? "border-textGold bg-textGold text-black"
+                  : "border-white/12 text-white/55 hover:border-white/35 hover:text-white"
+              }`}
+            >
+              {category.name}
+            </button>
+          ))}
+          <span className="ml-auto hidden items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-white/35 sm:flex">
+            <Check size={12} /> Bespoke by nature
+          </span>
+        </div>
+      )}
+
+      {materials.length > 0 && (
+        <div
+          className="mb-8 flex flex-wrap items-center gap-2"
+          aria-label="Filter products by material"
+        >
+          <span className="mr-1 text-[9px] uppercase tracking-[0.16em] text-white/35">
+            Material
+          </span>
+          {[
+            { token: "all", name: "All materials" },
+            ...materials.map((name) => ({ token: filterToken(name), name })),
+          ].map((material) => (
+            <button
+              type="button"
+              key={material.token}
+              aria-pressed={activeMaterial === material.token}
+              onClick={() => setActiveMaterial(material.token)}
+              className={`shrink-0 rounded-full border px-3 py-2 text-[9px] uppercase tracking-[0.12em] transition-colors ${
+                activeMaterial === material.token
+                  ? "border-textGold/70 text-textGold"
+                  : "border-white/10 text-white/45 hover:border-white/30 hover:text-white"
+              }`}
+            >
+              {material.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {filteredProducts.length > 0 ? (
+        <div className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-3">
+          {filteredProducts.map((product) => (
+            <Link key={product.id} href={`/products/${product.slug}`} className="group block">
+              <div className="relative aspect-[0.91] overflow-hidden rounded-md bg-[#111]">
+                {product.imageUrl && (
+                  <Image
+                    src={product.imageUrl}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10 opacity-70 transition-opacity group-hover:opacity-100" />
+                <span className="absolute left-4 top-4 text-[10px] tracking-[0.18em] text-white/75">
+                  {product.number}
+                </span>
+                <span className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/45 bg-black/20 text-white transition-all group-hover:border-textGold group-hover:bg-textGold group-hover:text-black">
+                  <ArrowUpRight size={17} strokeWidth={1.4} />
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-4 border-b border-white/10 py-4 transition-colors group-hover:border-textGold/50">
+                <div>
+                  <p className="mb-2 text-[9px] uppercase tracking-[0.2em] text-textGold">
+                    {product.category} <span className="px-1 text-white/25">/</span>{" "}
+                    {product.finish}
+                  </p>
+                  <h3 className="text-lg font-light text-white">{product.name}</h3>
+                  {product.shortDescription && (
+                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">
+                      {product.shortDescription}
+                    </p>
+                  )}
+                </div>
+                <Plus
+                  size={16}
+                  className="mt-1 shrink-0 text-white/40 transition-transform duration-300 group-hover:rotate-45 group-hover:text-textGold"
+                />
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="border border-white/10 bg-[#080808] px-6 py-14 text-center">
+          <p className="text-lg font-light">
+            {isConfigured
+              ? emptyTitle || "The collection is being prepared."
+              : "Connect the catalog to Supabase to publish products."}
+          </p>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-white/45">
+            {isConfigured
+              ? emptyDescription || "Published products will appear here. Please check back soon."
+              : "Set the Supabase environment variables, apply the catalog migration, then add products from the admin panel."}
+          </p>
+        </div>
+      )}
+    </section>
+  );
+
+  if (embeddedInCms) {
+    return collectionSection;
+  }
 
   return (
     <main className="bg-background text-white">
       <section className="relative overflow-hidden border-b border-white/10 px-4 pb-8 pt-6 sm:px-6 sm:pb-12 sm:pt-16 lg:pb-14 lg:pt-20">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-32 -top-48 h-[34rem] w-[34rem] rounded-full border border-textGold/10 sm:right-[-6rem] sm:top-[-19rem]">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-32 -top-48 h-[34rem] w-[34rem] rounded-full border border-textGold/10 sm:right-[-6rem] sm:top-[-19rem]"
+        >
           <div className="absolute inset-10 rounded-full border border-white/5" />
           <div className="absolute inset-24 rounded-full border border-white/5" />
         </div>
@@ -75,91 +236,57 @@ export default function ProductsCatalog({
               Metalwork, <span className="font-heading text-textGold">made yours.</span>
             </h1>
             <div className="max-w-md lg:justify-self-end">
-              <p className="text-sm leading-7 text-white/60 sm:text-base">A considered collection of gates and architectural railings, shaped around your space and finished by hand.</p>
-              <a href="#collection" className="mt-7 inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.22em] text-white transition-colors hover:text-textGold">
+              <p className="text-sm leading-7 text-white/60 sm:text-base">
+                A considered collection of gates and architectural railings, shaped around your
+                space and finished by hand.
+              </p>
+              <a
+                href="#collection"
+                className="mt-7 inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.22em] text-white transition-colors hover:text-textGold"
+              >
                 Explore the collection <ArrowDown size={15} strokeWidth={1.5} />
               </a>
             </div>
           </div>
           <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-white/10 pt-4 text-[9px] uppercase tracking-[0.12em] text-white/45 sm:mt-9 sm:grid-cols-4 sm:gap-5 sm:pt-4 sm:text-[10px] sm:tracking-[0.18em]">
-            <div><span className="mb-2 block text-xl font-light tracking-normal text-white">01</span>Made to measure</div>
-            <div><span className="mb-2 block text-xl font-light tracking-normal text-white">02</span>Thoughtful detailing</div>
-            <div><span className="mb-2 block text-xl font-light tracking-normal text-white">03</span>Built for everyday</div>
-            <div><span className="mb-2 block text-xl font-light tracking-normal text-white">04</span>Made in Moradabad</div>
+            <div>
+              <span className="mb-2 block text-xl font-light tracking-normal text-white">01</span>
+              Made to measure
+            </div>
+            <div>
+              <span className="mb-2 block text-xl font-light tracking-normal text-white">02</span>
+              Thoughtful detailing
+            </div>
+            <div>
+              <span className="mb-2 block text-xl font-light tracking-normal text-white">03</span>
+              Built for everyday
+            </div>
+            <div>
+              <span className="mb-2 block text-xl font-light tracking-normal text-white">04</span>
+              Made in Moradabad
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="collection" className="mx-auto max-w-7xl scroll-mt-20 px-4 pb-12 pt-8 sm:px-6 sm:pb-20 sm:pt-12 lg:pt-14">
-        <div className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-5 sm:mb-8 sm:gap-6 sm:pb-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="mb-3 text-[10px] uppercase tracking-[0.25em] text-textGold">The collection</p>
-            <h2 className="text-2xl font-light tracking-tight sm:text-4xl">Designed for the way you live.</h2>
-          </div>
-          <p className="max-w-sm text-sm leading-6 text-white/50">Every piece begins with a conversation, then takes shape around your architecture.</p>
-        </div>
-
-        {categories.length > 0 && (
-          <div className="scrollbar-none mb-8 flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="Filter products by category">
-            {categoryOptions.map((category) => (
-              <button type="button" key={category.slug} aria-pressed={activeCategory === category.slug} onClick={() => setActiveCategory(category.slug)}
-                className={`shrink-0 rounded-full border px-4 py-2.5 text-[10px] uppercase tracking-[0.13em] transition-colors ${activeCategory === category.slug ? "border-textGold bg-textGold text-black" : "border-white/12 text-white/55 hover:border-white/35 hover:text-white"}`}>
-                {category.name}
-              </button>
-            ))}
-            <span className="ml-auto hidden items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-white/35 sm:flex"><Check size={12} /> Bespoke by nature</span>
-          </div>
-        )}
-
-        {materials.length > 0 && <div className="mb-8 flex flex-wrap items-center gap-2" aria-label="Filter products by material">
-          <span className="mr-1 text-[9px] uppercase tracking-[0.16em] text-white/35">Material</span>
-          {[{ token: "all", name: "All materials" }, ...materials.map((name) => ({ token: filterToken(name), name }))].map((material) => (
-            <button type="button" key={material.token} aria-pressed={activeMaterial === material.token} onClick={() => setActiveMaterial(material.token)}
-              className={`shrink-0 rounded-full border px-3 py-2 text-[9px] uppercase tracking-[0.12em] transition-colors ${activeMaterial === material.token ? "border-textGold/70 text-textGold" : "border-white/10 text-white/45 hover:border-white/30 hover:text-white"}`}>
-              {material.name}
-            </button>
-          ))}
-        </div>}
-
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-3">
-            {filteredProducts.map((product) => (
-              <Link key={product.id} href={`/products/${product.slug}`} className="group block">
-                <div className="relative aspect-[0.91] overflow-hidden rounded-md bg-[#111]">
-                  {product.imageUrl && <Image src={product.imageUrl} alt={product.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]" />}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10 opacity-70 transition-opacity group-hover:opacity-100" />
-                  <span className="absolute left-4 top-4 text-[10px] tracking-[0.18em] text-white/75">{product.number}</span>
-                  <span className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/45 bg-black/20 text-white transition-all group-hover:border-textGold group-hover:bg-textGold group-hover:text-black"><ArrowUpRight size={17} strokeWidth={1.4} /></span>
-                </div>
-                <div className="flex items-start justify-between gap-4 border-b border-white/10 py-4 transition-colors group-hover:border-textGold/50">
-                  <div>
-                    <p className="mb-2 text-[9px] uppercase tracking-[0.2em] text-textGold">{product.category} <span className="px-1 text-white/25">/</span> {product.finish}</p>
-                    <h3 className="text-lg font-light text-white">{product.name}</h3>
-                    {product.shortDescription && <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">{product.shortDescription}</p>}
-                  </div>
-                  <Plus size={16} className="mt-1 shrink-0 text-white/40 transition-transform duration-300 group-hover:rotate-45 group-hover:text-textGold" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="border border-white/10 bg-[#080808] px-6 py-14 text-center">
-            <p className="text-lg font-light">{isConfigured ? "The collection is being prepared." : "Connect the catalog to Supabase to publish products."}</p>
-            <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-white/45">
-              {isConfigured ? "Published products will appear here. Please check back soon." : "Set the Supabase environment variables, apply the catalog migration, then add products from the admin panel."}
-            </p>
-          </div>
-        )}
-      </section>
+      {collectionSection}
 
       <section className="border-y border-white/10 bg-[#080808] px-4 py-12 sm:px-6 sm:py-20">
         <div className="mx-auto flex max-w-7xl flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="mb-3 text-[10px] uppercase tracking-[0.25em] text-textGold">Your space, your specification</p>
-            <h2 className="max-w-2xl text-2xl font-light leading-tight tracking-tight sm:text-4xl">Have a design in mind? Let&apos;s make it real.</h2>
+            <p className="mb-3 text-[10px] uppercase tracking-[0.25em] text-textGold">
+              Your space, your specification
+            </p>
+            <h2 className="max-w-2xl text-2xl font-light leading-tight tracking-tight sm:text-4xl">
+              Have a design in mind? Let&apos;s make it real.
+            </h2>
           </div>
-          <a href={whatsappHref} className="group inline-flex min-h-12 w-full items-center justify-between gap-5 rounded-full border border-textGold/45 px-5 py-3 text-[10px] uppercase tracking-[0.14em] text-textGold transition-colors hover:bg-textGold hover:text-black sm:w-fit sm:justify-center sm:px-6 sm:py-4 sm:tracking-[0.18em]">
-            Discuss your project <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+          <a
+            href={whatsappHref}
+            className="group inline-flex min-h-12 w-full items-center justify-between gap-5 rounded-full border border-textGold/45 px-5 py-3 text-[10px] uppercase tracking-[0.14em] text-textGold transition-colors hover:bg-textGold hover:text-black sm:w-fit sm:justify-center sm:px-6 sm:py-4 sm:tracking-[0.18em]"
+          >
+            Discuss your project{" "}
+            <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
           </a>
         </div>
       </section>

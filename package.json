@@ -10,7 +10,9 @@
     "seed:catalog": "node --env-file=.env.local scripts/seed-catalog.mjs",
     "seed:blog": "node --env-file=.env.local scripts/seed-blog.mjs",
     "seed:crm": "node --env-file=.env.local scripts/seed-crm.mjs",
+    "seed:cms": "node --env-file=.env.local scripts/seed-cms.mjs",
     "test:intelligence": "node scripts/test-intelligence-system.mjs",
+    "test:cms": "node scripts/test-cms-system.mjs",
     "test:seo": "node scripts/test-og-and-seo.mjs"
   },
   "dependencies": {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image, { type StaticImageData } from "next/image";
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, MessageCircle, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle, X, ZoomIn } from "lucide-react";
 
 export type GalleryItem = {
   id: string;
@@ -15,57 +15,67 @@ export type GalleryItem = {
   alt: string;
 };
 
+const DEFAULT_CATEGORIES = [
+  { slug: "all", name: "All Works" },
+  { slug: "gates", name: "Main Gates" },
+  { slug: "stair-railings", name: "Staircase Railings" },
+  { slug: "balcony-railings", name: "Balcony Railings" },
+  { slug: "spiral-railings", name: "Spiral Railings" },
+  { slug: "decorative-metalwork", name: "Decorative Metalwork" },
+];
+
 export default function GalleryLightbox({
   items,
+  categories = DEFAULT_CATEGORIES,
 }: {
   items: GalleryItem[];
+  categories?: Array<{ slug: string; name: string }>;
 }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const categories = [
-    { slug: "all", name: "All Works" },
-    { slug: "gates", name: "Main Gates" },
-    { slug: "stair-railings", name: "Staircase Railings" },
-    { slug: "balcony-railings", name: "Balcony Railings" },
-    { slug: "spiral-railings", name: "Spiral Railings" },
-    { slug: "decorative-metalwork", name: "Decorative Metalwork" },
-  ];
+  const filterList = categories.length ? categories : DEFAULT_CATEGORIES;
 
-  const filteredItems = activeCategory === "all"
-    ? items
-    : items.filter((item) => item.categorySlug === activeCategory);
+  const filteredItems =
+    activeCategory === "all"
+      ? items
+      : items.filter((item) => item.categorySlug === activeCategory);
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
-    document.body.style.overflow = "hidden";
   };
 
   const closeLightbox = useCallback(() => {
     setLightboxIndex(null);
-    document.body.style.overflow = "";
   }, []);
 
   const showNext = useCallback(() => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((prev) => ((prev! + 1) % filteredItems.length));
+    if (lightboxIndex === null || filteredItems.length === 0) return;
+    setLightboxIndex((prev) => (prev! + 1) % filteredItems.length);
   }, [lightboxIndex, filteredItems.length]);
 
   const showPrev = useCallback(() => {
-    if (lightboxIndex === null) return;
+    if (lightboxIndex === null || filteredItems.length === 0) return;
     setLightboxIndex((prev) => (prev! === 0 ? filteredItems.length - 1 : prev! - 1));
   }, [lightboxIndex, filteredItems.length]);
 
   useEffect(() => {
+    if (lightboxIndex === null) {
+      document.body.style.overflow = "";
+      return;
+    }
+    document.body.style.overflow = "hidden";
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (lightboxIndex === null) return;
       if (e.key === "Escape") closeLightbox();
       if (e.key === "ArrowRight") showNext();
       if (e.key === "ArrowLeft") showPrev();
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [lightboxIndex, closeLightbox, showNext, showPrev]);
 
   const currentItem = lightboxIndex !== null ? filteredItems[lightboxIndex] : null;
@@ -74,7 +84,7 @@ export default function GalleryLightbox({
     <div>
       {/* Category Filter Pills */}
       <div className="scrollbar-none mb-8 flex gap-2 overflow-x-auto pb-2 sm:mb-12 sm:flex-wrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {categories.map((cat) => {
+        {filterList.map((cat) => {
           const isActive = activeCategory === cat.slug;
           return (
             <button
@@ -86,7 +96,7 @@ export default function GalleryLightbox({
               }}
               className={`shrink-0 rounded-full border px-4 py-2.5 text-[10px] uppercase tracking-[0.16em] transition-colors ${
                 isActive
-                  ? "border-textGold bg-textGold text-black font-semibold"
+                  ? "border-textGold bg-textGold font-semibold text-black"
                   : "border-white/12 text-white/60 hover:border-white/30 hover:text-white"
               }`}
             >
@@ -113,15 +123,12 @@ export default function GalleryLightbox({
                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
 
-              {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-90" />
 
-              {/* Zoom badge */}
               <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white/70 opacity-0 backdrop-blur-sm transition-all duration-300 group-hover:opacity-100 sm:right-4 sm:top-4">
                 <ZoomIn size={15} />
               </span>
 
-              {/* Bottom Details */}
               <div className="absolute inset-x-0 bottom-0 p-3.5 transition-transform duration-300 sm:p-5">
                 <p className="text-[8px] uppercase tracking-[0.2em] text-textGold sm:text-[9px]">
                   {item.category}
@@ -149,7 +156,6 @@ export default function GalleryLightbox({
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-md sm:p-8"
         >
-          {/* Close button */}
           <button
             type="button"
             onClick={closeLightbox}
@@ -159,7 +165,6 @@ export default function GalleryLightbox({
             <X size={20} />
           </button>
 
-          {/* Previous / Next buttons */}
           <button
             type="button"
             onClick={showPrev}
@@ -178,9 +183,7 @@ export default function GalleryLightbox({
             <ChevronRight size={22} />
           </button>
 
-          {/* Modal Container */}
           <div className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a0a] lg:flex-row">
-            {/* Image section */}
             <div className="relative aspect-[4/3] w-full bg-black lg:aspect-auto lg:h-[75vh] lg:w-3/5">
               <Image
                 src={currentItem.image}
@@ -192,7 +195,6 @@ export default function GalleryLightbox({
               />
             </div>
 
-            {/* Content section */}
             <div className="flex flex-1 flex-col justify-between overflow-y-auto p-6 sm:p-8 lg:p-10">
               <div>
                 <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-white/40">
@@ -219,7 +221,7 @@ export default function GalleryLightbox({
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-white/10">
+              <div className="mt-8 border-t border-white/10 pt-6">
                 <a
                   href={`https://wa.me/919634776691?text=${encodeURIComponent(
                     `Hello Afsha Creative Solution, I saw this design in your gallery and would like a quote:\n\nProject: ${currentItem.title}\nCategory: ${currentItem.category}\nMaterial: ${currentItem.material}`

@@ -1,14 +1,16 @@
 import { CheckCircle2, ShieldAlert, Sparkles } from "lucide-react";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAdminIntegrationsStatus } from "@/lib/crm";
+import { checkCmsTablesStatus } from "@/lib/cms/queries";
 import AdminNav from "../../admin-nav";
 
 export const metadata = { title: "Integrations & Diagnostic | Afsha Creative Solution" };
 
 export default async function AdminIntegrationsPage() {
-  const [, integrations] = await Promise.all([
+  const [, integrations, cmsStatus] = await Promise.all([
     requireAdmin(),
     getAdminIntegrationsStatus(),
+    checkCmsTablesStatus(),
   ]);
 
   return (
@@ -70,14 +72,26 @@ export default async function AdminIntegrationsPage() {
             Database Migration Reference
           </h3>
           <p className="mt-2 text-xs leading-relaxed text-white/70">
-            The database migration script is stored at:
+            CRM & Customer Intelligence Migration:
             <br />
             <code className="text-textGold font-mono">
               supabase/migrations/202611250001_customer_intelligence_and_crm.sql
             </code>
           </p>
+          <p className="mt-3 text-xs leading-relaxed text-white/70">
+            Visual CMS & Media Library Migration (Status:{" "}
+            <strong className={cmsStatus.ready ? "text-emerald-400" : "text-amber-400"}>
+              {cmsStatus.ready ? `Active (${cmsStatus.pagesCount} pages)` : "Not applied yet"}
+            </strong>
+            ):
+            <br />
+            <code className="text-textGold font-mono">
+              supabase/migrations/202611260001_cms_and_media.sql
+            </code>
+          </p>
           <p className="mt-2 text-xs leading-relaxed text-white/60">
-            Paste and execute this file in your Supabase SQL Editor to initialize all 10 tables, triggers, and Row Level Security policies.
+            Execute these migration scripts in your Supabase SQL Editor in chronological order to
+            initialize all tables, Storage buckets, and Row Level Security policies.
           </p>
         </div>
       </div>

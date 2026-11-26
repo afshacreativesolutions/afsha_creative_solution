@@ -6,26 +6,30 @@ import { ChevronDown, Search } from "lucide-react";
 export type FAQItem = {
   question: string;
   answer: string;
-  category: "products" | "customization" | "ordering" | "business";
+  category: string;
 };
+
+const DEFAULT_FAQ_CATEGORIES = [
+  { slug: "all", name: "All Questions" },
+  { slug: "products", name: "Products" },
+  { slug: "customization", name: "Customization" },
+  { slug: "ordering", name: "Ordering & Quotes" },
+  { slug: "business", name: "Workshop & Location" },
+];
 
 export default function FAQAccordion({
   faqs,
+  categories = DEFAULT_FAQ_CATEGORIES,
 }: {
   faqs: FAQItem[];
+  categories?: Array<{ slug: string; name: string }>;
 }) {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const baseId = useId();
 
-  const categories = [
-    { slug: "all", name: "All Questions" },
-    { slug: "products", name: "Products" },
-    { slug: "customization", name: "Customization" },
-    { slug: "ordering", name: "Ordering & Quotes" },
-    { slug: "business", name: "Workshop & Location" },
-  ];
+  const categoryList = categories.length ? categories : DEFAULT_FAQ_CATEGORIES;
 
   const filteredFaqs = faqs.filter((faq) => {
     const matchesCategory = activeCategory === "all" || faq.category === activeCategory;
@@ -45,7 +49,7 @@ export default function FAQAccordion({
       {/* Search and Category Filter */}
       <div className="mb-8 flex flex-col gap-4 sm:mb-12 sm:flex-row sm:items-center sm:justify-between">
         <div className="scrollbar-none flex gap-2 overflow-x-auto pb-2 sm:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {categories.map((cat) => {
+          {categoryList.map((cat) => {
             const isActive = activeCategory === cat.slug;
             return (
               <button
@@ -57,7 +61,7 @@ export default function FAQAccordion({
                 }}
                 className={`shrink-0 rounded-full border px-4 py-2 text-[10px] uppercase tracking-[0.16em] transition-colors ${
                   isActive
-                    ? "border-textGold bg-textGold text-black font-semibold"
+                    ? "border-textGold bg-textGold font-semibold text-black"
                     : "border-white/12 text-white/55 hover:border-white/30 hover:text-white"
                 }`}
               >
@@ -91,7 +95,7 @@ export default function FAQAccordion({
             const panelId = `${baseId}-panel-${index}`;
 
             return (
-              <div key={faq.question} className="py-2">
+              <div key={`${faq.question}-${index}`} className="py-2">
                 <button
                   type="button"
                   id={buttonId}

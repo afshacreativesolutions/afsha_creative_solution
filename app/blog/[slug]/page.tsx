@@ -7,6 +7,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import CTASection from "@/components/CTASection";
 import JsonLd from "@/components/JsonLd";
 import { getPublicBlogPost, getPublicBlogPosts } from "@/lib/catalog";
+import { getPublishedCmsSiteSettings } from "@/lib/cms/queries";
 import { getStaticBlogPost, STATIC_BLOG_POSTS, type StaticBlogPost } from "@/lib/blog-data";
 import { absoluteUrl } from "@/lib/seo";
 
@@ -89,8 +90,23 @@ export default async function BlogDetailPage({ params }: BlogPageProps) {
   };
 
   // Related articles (exclude current)
-  const allPosts = await getPublicBlogPosts();
-  const relatedPosts = STATIC_BLOG_POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);
+  const [allPosts, siteSettings] = await Promise.all([
+    getPublicBlogPosts(),
+    getPublishedCmsSiteSettings(),
+  ]);
+  const tpl = siteSettings.template_defaults.blogDetail;
+  const mergedRelatedPool: StaticBlogPost[] = [
+    ...STATIC_BLOG_POSTS,
+    ...allPosts
+      .filter((p) => !STATIC_BLOG_POSTS.some((sp) => sp.slug === p.slug))
+      .map((p) => ({
+        ...p,
+        category: "Architectural Metalwork",
+        readTime: "5 min read",
+        author: siteSettings.site_identity.siteLegalName,
+      })),
+  ];
+  const relatedPosts = mergedRelatedPool.filter((p) => p.slug !== post.slug).slice(0, 3);
 
   const imageSrc = post.staticImage || post.featured_image || "/videos/hero-poster.webp";
   const formattedDate = post.published_at
@@ -145,7 +161,7 @@ export default async function BlogDetailPage({ params }: BlogPageProps) {
             href="/blog"
             className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/50 transition hover:text-textGold"
           >
-            <ArrowLeft size={14} /> Back to all articles
+            <ArrowLeft size={14} /> {tpl.backLabel}
           </Link>
           <span className="rounded-full bg-textGold/10 border border-textGold/30 px-3 py-1 text-[9px] uppercase tracking-[0.18em] text-textGold">
             {post.category}
@@ -249,18 +265,18 @@ export default async function BlogDetailPage({ params }: BlogPageProps) {
         {/* In-article CTA box */}
         <div className="mt-12 rounded-2xl border border-textGold/30 bg-textGold/[0.04] p-6 sm:mt-16 sm:p-10">
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-textGold">
-            <Sparkles size={14} /> Custom Fabrication In Moradabad
+            <Sparkles size={14} /> {tpl.ctaEyebrow}
           </div>
           <h3 className="mt-3 text-xl font-light text-white sm:text-2xl">
-            Want to fabricate a design featured in this guide?
+            {tpl.ctaHeading}
           </h3>
           <p className="mt-2 text-sm leading-6 text-white/65">
-            Send us your site dimensions and reference requirements. Our workshop team in Moradabad will review your specifications and provide a free design consultation.
+            {tpl.ctaDescription}
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-4">
             <a
-              href={`https://wa.me/919634776691?text=${encodeURIComponent(
-                `Hello Afsha Creative Solution, I read your article "${post.title}" and would like to discuss a similar metalwork design.`
+              href={`https://wa.me/${siteSettings.site_identity.whatsappNumber}?text=${encodeURIComponent(
+                `Hello ${siteSettings.site_identity.siteLegalName}, I read your article "${post.title}" and would like to discuss a similar metalwork design.`
               )}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -283,10 +299,10 @@ export default async function BlogDetailPage({ params }: BlogPageProps) {
             <div className="mb-8 flex items-center justify-between">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.2em] text-textGold">
-                  More Knowledge
+                  {tpl.relatedEyebrow}
                 </p>
                 <h3 className="mt-1 text-2xl font-light text-white">
-                  Related Guides & Articles
+                  {tpl.relatedHeading}
                 </h3>
               </div>
               <Link

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Analytics as VercelAnalytics } from "@vercel/analytics/next"
+// import { Analytics as VercelAnalytics } from "@vercel/analytics/next"
 import { Geist, Outfit } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -19,11 +19,11 @@ import {
   PRODUCTION_SITE_URL,
   SITE_NAME,
   SITE_DESCRIPTION,
-  BUSINESS_PHONE_DISPLAY,
   BUSINESS_EMAIL,
   BUSINESS_ADDRESS,
   absoluteUrl,
 } from "@/lib/seo";
+import { getPublishedCmsSiteSettings } from "@/lib/cms/queries";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -37,105 +37,119 @@ const outfit = Outfit({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(PRODUCTION_SITE_URL),
-  title: {
-    default: "Custom Metal Gates & Railings in Moradabad | Afsha Creative Solution",
-    template: "%s | Afsha Creative Solution",
-  },
-  description: SITE_DESCRIPTION,
-  applicationName: SITE_NAME,
-  keywords: DEFAULT_KEYWORDS,
-  authors: [{ name: SITE_NAME, url: PRODUCTION_SITE_URL }],
-  creator: SITE_NAME,
-  publisher: SITE_NAME,
-  alternates: {
-    canonical: PRODUCTION_SITE_URL,
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_IN",
-    url: PRODUCTION_SITE_URL,
-    siteName: SITE_NAME,
-    title: "Custom Metal Gates & Railings in Moradabad | Afsha Creative Solution",
-    description: SITE_DESCRIPTION,
-    images: [
-      {
-        url: absoluteUrl("/opengraph-image"),
-        width: 1200,
-        height: 630,
-        alt: "Afsha Creative Solution — Architectural Metalwork",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Custom Metal Gates & Railings in Moradabad | Afsha Creative Solution",
-    description: SITE_DESCRIPTION,
-    images: [absoluteUrl("/opengraph-image")],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getPublishedCmsSiteSettings().catch(() => null);
+  const seo = settings?.seo_defaults;
+  const siteName = settings?.site_identity.siteName || SITE_NAME;
+  const defaultTitle =
+    seo?.defaultTitle || "Custom Metal Gates & Railings in Moradabad | Afsha Creative Solution";
+  const titleTemplate = seo?.titleTemplate || "%s | Afsha Creative Solution";
+  const description = seo?.defaultDescription || SITE_DESCRIPTION;
+  const keywords = seo?.keywords?.length ? seo.keywords : DEFAULT_KEYWORDS;
+  const ogAlt = seo?.ogImageAlt || "Afsha Creative Solution — Architectural Metalwork";
+
+  return {
+    metadataBase: new URL(PRODUCTION_SITE_URL),
+    title: {
+      default: defaultTitle,
+      template: titleTemplate,
+    },
+    description,
+    applicationName: siteName,
+    keywords,
+    authors: [{ name: siteName, url: PRODUCTION_SITE_URL }],
+    creator: siteName,
+    publisher: siteName,
+    alternates: {
+      canonical: PRODUCTION_SITE_URL,
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_IN",
+      url: PRODUCTION_SITE_URL,
+      siteName,
+      title: defaultTitle,
+      description,
+      images: [
+        {
+          url: absoluteUrl("/opengraph-image"),
+          width: 1200,
+          height: 630,
+          alt: ogAlt,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: defaultTitle,
+      description,
+      images: [absoluteUrl("/opengraph-image")],
+    },
+    robots: {
       index: true,
       follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
     },
-  },
-};
+  };
+}
 
-const organizationSchema = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: SITE_NAME,
-  url: PRODUCTION_SITE_URL,
-  email: BUSINESS_EMAIL,
-  telephone: "+91-9634776691",
-  address: {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const settings = await getPublishedCmsSiteSettings().catch(() => null);
+  const id = settings?.site_identity;
+  const seo = settings?.seo_defaults;
+
+  const siteName = id?.siteName || SITE_NAME;
+  const email = id?.email || BUSINESS_EMAIL;
+  const telephone = id?.phoneDisplay || "+91-9634776691";
+  const address = {
     "@type": "PostalAddress",
-    streetAddress: BUSINESS_ADDRESS.streetAddress,
-    addressLocality: BUSINESS_ADDRESS.addressLocality,
-    addressRegion: BUSINESS_ADDRESS.addressRegion,
-    postalCode: BUSINESS_ADDRESS.postalCode,
-    addressCountry: BUSINESS_ADDRESS.addressCountry,
-  },
-};
+    streetAddress: id?.streetAddress || BUSINESS_ADDRESS.streetAddress,
+    addressLocality: id?.city || BUSINESS_ADDRESS.addressLocality,
+    addressRegion: id?.state || BUSINESS_ADDRESS.addressRegion,
+    postalCode: id?.postalCode || BUSINESS_ADDRESS.postalCode,
+    addressCountry: id?.country || BUSINESS_ADDRESS.addressCountry,
+  };
 
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  name: SITE_NAME,
-  url: PRODUCTION_SITE_URL,
-  email: BUSINESS_EMAIL,
-  telephone: "+91-9634776691",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: BUSINESS_ADDRESS.streetAddress,
-    addressLocality: BUSINESS_ADDRESS.addressLocality,
-    addressRegion: BUSINESS_ADDRESS.addressRegion,
-    postalCode: BUSINESS_ADDRESS.postalCode,
-    addressCountry: BUSINESS_ADDRESS.addressCountry,
-  },
-  areaServed: "Moradabad, Uttar Pradesh, India",
-  priceRange: "₹₹₹",
-};
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: siteName,
+    url: PRODUCTION_SITE_URL,
+    email,
+    telephone,
+    address,
+  };
 
-const websiteSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: SITE_NAME,
-  url: PRODUCTION_SITE_URL,
-  potentialAction: {
-    "@type": "SearchAction",
-    target: `${PRODUCTION_SITE_URL}/products?search={search_term_string}`,
-    "query-input": "required name=search_term_string",
-  },
-};
+  const localBusinessSchema = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: siteName,
+    url: PRODUCTION_SITE_URL,
+    email,
+    telephone,
+    address,
+    areaServed: seo?.areaServed || "Moradabad, Uttar Pradesh, India",
+    priceRange: seo?.priceRange || "₹₹₹",
+  };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteName,
+    url: PRODUCTION_SITE_URL,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${PRODUCTION_SITE_URL}/products?search={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <html
       lang="en"
@@ -150,18 +164,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           fetchPriority="high"
         />
       </head>
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="flex min-h-full flex-col font-sans">
         <JsonLd data={[organizationSchema, localBusinessSchema, websiteSchema]} />
-        <VercelAnalytics />
+
         <Analytics />
         <ConsentProvider>
           <NavigationTracker />
           <MenuProvider>
-            <Navbar />
-            <Menu />
-            <Whatsapp />
+            <Navbar navigation={settings?.navigation} identity={settings?.site_identity} />
+            <Menu megaMenu={settings?.mega_menu} />
+            <Whatsapp identity={settings?.site_identity} />
             {children}
-            <Footer />
+            <Footer footer={settings?.footer} identity={settings?.site_identity} />
             <CookieBanner />
             <CookieSettingsModal />
           </MenuProvider>

@@ -33,15 +33,18 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const existing = readStoredConsent();
-    if (existing) {
-      setConsent(existing);
-      applyGoogleConsent(existing.categories);
-      setIsBannerVisible(false);
-    } else {
-      setIsBannerVisible(true);
-    }
+    const frame = window.requestAnimationFrame(() => {
+      setMounted(true);
+      const existing = readStoredConsent();
+      if (existing) {
+        setConsent(existing);
+        applyGoogleConsent(existing.categories);
+        setIsBannerVisible(false);
+      } else {
+        setIsBannerVisible(true);
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   async function postConsentRecord(state: ConsentState) {

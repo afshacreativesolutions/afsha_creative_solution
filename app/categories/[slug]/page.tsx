@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, ArrowUpRight, Check, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 import CTASection from "@/components/CTASection";
 import JsonLd from "@/components/JsonLd";
+import CMSPageRenderer from "@/components/cms/CMSPageRenderer";
 import { getPublicCategories, getPublicProducts } from "@/lib/catalog";
+import { getCmsPageForRender, getPublishedCmsSiteSettings } from "@/lib/cms/queries";
+import { buildCmsPageMetadata } from "@/lib/cms/seo";
 import { images } from "@/utils/images";
 import { absoluteUrl } from "@/lib/seo";
 
@@ -15,6 +18,10 @@ type CategoryPageProps = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const cmsOverride = await getCmsPageForRender(`/categories/${slug}`);
+  if (cmsOverride) {
+    return buildCmsPageMetadata(cmsOverride, `/categories/${slug}`);
+  }
   const categories = await getPublicCategories();
   const category = categories.find((item) => item.slug === slug);
   if (!category) return { title: "Category Not Found | Afsha Creative Solutions" };
@@ -56,13 +63,24 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
 export default async function CategoryDetailPage({ params }: CategoryPageProps) {
   const { slug } = await params;
-  const [categories, products] = await Promise.all([
+  const [cmsOverride, categories, products, siteSettings] = await Promise.all([
+    getCmsPageForRender(`/categories/${slug}`),
     getPublicCategories(),
     getPublicProducts(),
+    getPublishedCmsSiteSettings(),
   ]);
+
+  if (cmsOverride) {
+    return <CMSPageRenderer page={cmsOverride} context={{ products, categories }} />;
+  }
 
   const category = categories.find((item) => item.slug === slug);
   if (!category) notFound();
+
+  const tpl = siteSettings.template_defaults.categoryDetail;
+  const whatsappUrl = `https://wa.me/${siteSettings.site_identity.whatsappNumber}?text=${encodeURIComponent(
+    `Hello ${siteSettings.site_identity.siteLegalName}, I would like a custom quote for ${category.name}.`
+  )}`;
 
   const categoryProducts = products.filter(
     (product) =>
@@ -113,7 +131,7 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
       />
 
       <PageHero
-        eyebrow="Category Collection · Moradabad, India"
+        eyebrow={tpl.heroEyebrow}
         title={
           <>
             {category.name} <span className="text-textGold font-heading">Collection</span>
@@ -128,21 +146,16 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
           { name: "Categories", href: "/categories" },
           { name: category.name, href: `/categories/${category.slug}` },
         ]}
-        primaryCta={{ label: "Request Custom Quote", href: "/custom-metalwork" }}
-        badges={[
-          "Made to Measure",
-          "Workshop in Moradabad",
-          "Zero Standard Size Limits",
-          "High-Tensile Finish",
-        ]}
+        primaryCta={{ label: tpl.primaryCtaLabel, href: tpl.primaryCtaHref }}
+        badges={tpl.badges}
       />
 
       {/* Products & Designs Section */}
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20">
         <SectionHeading
-          eyebrow="Featured Designs"
+          eyebrow={tpl.portfolioEyebrow}
           title={`${category.name} Portfolio`}
-          description="Each design can be fabricated to your exact opening dimensions, height, and preferred metal alloy."
+          description={tpl.portfolioDescription}
         />
 
         {categoryProducts.length > 0 ? (
@@ -231,11 +244,12 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
 
       <CTASection
         eyebrow={`Custom ${category.name}`}
-        title={`Have an idea for ${category.name.toLowerCase()}?`}
-        description="Share your measurements, photos, or architectural blueprints with our Moradabad fabrication experts."
+        title={`${tpl.ctaTitlePrefix} ${category.name.toLowerCase()}?`}
+        description={tpl.ctaDescription}
         primaryLabel="Message On WhatsApp"
+        primaryHref={whatsappUrl}
         secondaryLabel="Submit Specifications"
-        secondaryHref="/custom-metalwork"
+        secondaryHref={tpl.primaryCtaHref}
       />
     </main>
   );
