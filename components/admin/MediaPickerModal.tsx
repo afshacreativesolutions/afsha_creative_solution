@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Image as ImageIcon, Loader2, Search, Sparkles, Upload, X } from "lucide-react";
+import { ADMIN_BTN_PRIMARY, ADMIN_BTN_SECONDARY, ADMIN_INPUT_CLASS, ADMIN_LABEL_CLASS } from "./admin-styles";
 import { ASSET_FILE_MAP, formatFileSize } from "@/lib/cms/media";
 import type { CmsImageRef, CmsMediaRecord } from "@/lib/cms/types";
 
@@ -32,6 +33,20 @@ export default function MediaPickerModal({
   const [uploading, setUploading] = useState(false);
 
   const uploadAlt = customAlt !== null ? customAlt : currentAlt;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -115,34 +130,37 @@ export default function MediaPickerModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={title}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !uploading) onClose();
+      }}
     >
-      <div className="flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a0a] text-white shadow-2xl">
+      <div className="flex h-[92svh] w-full max-w-4xl flex-col overflow-hidden rounded-t-2xl border border-white/15 bg-[#0a0a0a] text-white shadow-2xl sm:h-auto sm:max-h-[88vh] sm:rounded-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <div>
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3.5 sm:px-5 sm:py-4">
+          <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-[0.2em] text-textGold">Media Library</p>
-            <h2 className="mt-0.5 text-base font-medium">{title}</h2>
+            <h2 className="mt-0.5 truncate text-sm font-medium sm:text-base">{title}</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-white/10 p-2 text-white/60 hover:border-white/25 hover:text-white"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 text-white/60 hover:border-white/25 hover:text-white"
             aria-label="Close modal"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-white/10 bg-[#070707] px-5 py-3">
+        <div className="scrollbar-none flex items-center gap-2 overflow-x-auto border-b border-white/10 bg-[#070707] px-4 py-3 sm:flex-wrap sm:px-5">
           {[
             { id: "library" as const, label: "Uploaded Media", icon: ImageIcon },
-            { id: "upload" as const, label: "Upload New Image", icon: Upload },
-            { id: "builtin" as const, label: "Curated Project Photos", icon: Sparkles },
+            { id: "upload" as const, label: "Upload Image", icon: Upload },
+            { id: "builtin" as const, label: "Curated Photos", icon: Sparkles },
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -151,10 +169,10 @@ export default function MediaPickerModal({
                 setTab(id);
                 setError(null);
               }}
-              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition ${
+              className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border px-3.5 text-xs transition ${
                 tab === id
-                  ? "border-textGold/60 bg-textGold/15 text-textGold"
-                  : "border-white/10 text-white/60 hover:text-white"
+                  ? "border-textGold/60 bg-textGold/15 font-medium text-textGold"
+                  : "border-white/10 text-white/65 hover:text-white"
               }`}
             >
               <Icon size={14} /> {label}
@@ -163,9 +181,9 @@ export default function MediaPickerModal({
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-5">
           {error && (
-            <div className="mb-4 rounded-lg border border-red-500/40 bg-red-950/40 px-4 py-2.5 text-xs text-red-200">
+            <div role="alert" className="mb-4 rounded-lg border border-red-500/40 bg-red-950/40 px-4 py-2.5 text-xs text-red-200">
               {error}
             </div>
           )}
@@ -175,14 +193,14 @@ export default function MediaPickerModal({
               <div className="relative mb-4">
                 <Search
                   size={15}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/40"
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40"
                 />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search images by filename or alt text..."
-                  className="w-full rounded-lg border border-white/15 bg-[#111] py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/35 focus:border-textGold focus:outline-none"
+                  className={`${ADMIN_INPUT_CLASS} pl-10`}
                 />
               </div>
 
@@ -191,15 +209,15 @@ export default function MediaPickerModal({
                   <Loader2 size={18} className="mr-2 animate-spin text-textGold" /> Loading images...
                 </div>
               ) : items.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-white/15 py-14 text-center">
+                <div className="rounded-xl border border-dashed border-white/15 px-4 py-14 text-center">
                   <p className="text-sm text-white/65">No images found in Media Library.</p>
-                  <p className="mt-1 text-xs text-white/40">
+                  <p className="mt-1 text-xs text-white/45">
                     Upload a new image or choose a curated project photo.
                   </p>
                   <button
                     type="button"
                     onClick={() => setTab("upload")}
-                    className="mt-4 inline-flex items-center gap-2 rounded-lg border border-textGold/50 bg-textGold/15 px-4 py-2 text-xs text-textGold hover:bg-textGold hover:text-black"
+                    className={`${ADMIN_BTN_PRIMARY} mt-4`}
                   >
                     <Upload size={14} /> Upload Image
                   </button>
@@ -221,7 +239,7 @@ export default function MediaPickerModal({
                         });
                         onClose();
                       }}
-                      className="group overflow-hidden rounded-xl border border-white/10 bg-[#111] text-left transition hover:border-textGold/60"
+                      className="group overflow-hidden rounded-xl border border-white/10 bg-[#111] text-left transition hover:border-textGold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-textGold"
                     >
                       <div className="relative aspect-[4/3] w-full overflow-hidden bg-black">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -249,9 +267,9 @@ export default function MediaPickerModal({
           )}
 
           {tab === "upload" && (
-            <form onSubmit={handleUpload} className="mx-auto max-w-lg space-y-4 py-4">
+            <form onSubmit={handleUpload} className="mx-auto max-w-lg space-y-4 py-2">
               <div>
-                <label className="mb-1.5 block text-xs uppercase tracking-[0.14em] text-white/60">
+                <label className={ADMIN_LABEL_CLASS}>
                   Image File (JPEG, PNG, WebP, AVIF · Max 8 MB)
                 </label>
                 <input
@@ -269,35 +287,33 @@ export default function MediaPickerModal({
                       );
                     }
                   }}
-                  className="block w-full rounded-lg border border-white/15 bg-[#111] p-2.5 text-xs text-white/80 file:mr-3 file:rounded-md file:border-0 file:bg-textGold/20 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-textGold"
+                  className="block min-h-12 w-full rounded-lg border border-white/15 bg-[#111] p-2.5 text-sm text-white/80 file:mr-3 file:min-h-9 file:rounded-md file:border-0 file:bg-textGold/20 file:px-3 file:text-xs file:font-medium file:text-textGold"
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs uppercase tracking-[0.14em] text-white/60">
-                  Alt Text (for Accessibility & SEO)
-                </label>
+                <label className={ADMIN_LABEL_CLASS}>Alt Text (Accessibility &amp; SEO)</label>
                 <input
                   type="text"
                   value={uploadAlt}
                   onChange={(e) => setCustomAlt(e.target.value)}
                   placeholder="e.g., Custom stainless steel main entrance gate in Moradabad"
-                  className="w-full rounded-lg border border-white/15 bg-[#111] px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-textGold focus:outline-none"
+                  className={ADMIN_INPUT_CLASS}
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex flex-col-reverse gap-2.5 pt-2 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg border border-white/15 px-4 py-2 text-xs text-white/70 hover:text-white"
+                  className={`${ADMIN_BTN_SECONDARY} w-full sm:w-auto`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={uploading || !uploadFile}
-                  className="inline-flex items-center gap-2 rounded-lg bg-textGold px-5 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-white disabled:opacity-50"
+                  className={`${ADMIN_BTN_PRIMARY} w-full sm:w-auto`}
                 >
                   {uploading ? (
                     <>
@@ -305,7 +321,7 @@ export default function MediaPickerModal({
                     </>
                   ) : (
                     <>
-                      <Upload size={14} /> Upload & Select
+                      <Upload size={14} /> Upload &amp; Select
                     </>
                   )}
                 </button>
@@ -329,7 +345,7 @@ export default function MediaPickerModal({
                       });
                       onClose();
                     }}
-                    className="group overflow-hidden rounded-xl border border-white/10 bg-[#111] p-3 text-left transition hover:border-textGold/60"
+                    className="group min-h-24 overflow-hidden rounded-xl border border-white/10 bg-[#111] p-3 text-left transition hover:border-textGold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-textGold"
                   >
                     <p className="text-[10px] uppercase tracking-[0.14em] text-textGold">
                       Project Asset

@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
+import AdminBreadcrumbs from "@/components/admin/AdminBreadcrumbs";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { requireAdmin } from "@/lib/admin-auth";
 import { getAdminBlogPost } from "@/lib/catalog";
-import AdminNav from "../../../admin-nav";
 import BlogForm from "../../blog-form";
 
 type EditPageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> };
@@ -9,18 +10,27 @@ type EditPageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ 
 export const metadata = { title: "Edit Article | Afsha Creative Solution" };
 
 export default async function EditBlogPage({ params, searchParams }: EditPageProps) {
+  await requireAdmin();
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const [, post] = await Promise.all([
-    requireAdmin(),
-    getAdminBlogPost(id),
-  ]);
+  const post = await getAdminBlogPost(id);
+
   if (!post) notFound();
+
   return (
-    <main className="min-h-[75vh] bg-background text-white">
-      <AdminNav />
-      <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
-        <BlogForm post={post} saved={query.saved === "1"} />
-      </div>
+    <main className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <AdminBreadcrumbs
+        items={[
+          { label: "Dashboard", href: "/admin" },
+          { label: "Blog Articles", href: "/admin/blog" },
+          { label: post.title },
+        ]}
+      />
+      <AdminPageHeader
+        eyebrow="Editorial & Guides"
+        title={`Edit: ${post.title}`}
+        description="Refine article copy, publishing schedule, featured image, and SEO metadata."
+      />
+      <BlogForm post={post} saved={query.saved === "1"} />
     </main>
   );
 }

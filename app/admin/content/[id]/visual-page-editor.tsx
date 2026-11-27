@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
-  AlertTriangle,
   ArrowDown,
   ArrowLeft,
   ArrowUp,
@@ -24,9 +23,10 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
+import { ADMIN_BTN_PRIMARY, ADMIN_BTN_SECONDARY } from "@/components/admin/admin-styles";
 import CMSPageRenderer from "@/components/cms/CMSPageRenderer";
 import type { CMSSectionContext } from "@/components/cms/CMSSectionRenderer";
-import { getDefaultSectionContent } from "@/lib/cms/validation";
 import type {
   CmsPageRecord,
   CmsRevisionRecord,
@@ -34,6 +34,7 @@ import type {
   CmsSectionType,
   ResolvedCmsPage,
 } from "@/lib/cms/types";
+import { getDefaultSectionContent } from "@/lib/cms/validation";
 import {
   publishCmsPageAction,
   restoreCmsRevisionAction,
@@ -300,19 +301,21 @@ export default function VisualPageEditor({
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
-      {/* Top Studio Header Bar */}
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#080808]/95 px-4 py-3 backdrop-blur-md sm:px-6">
-        <div className="mx-auto flex max-w-[1700px] flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-[#050505] text-white lg:min-h-[calc(100vh-4rem)]">
+      {/* Studio Toolbar directly beneath AdminHeader */}
+      <div className="border-b border-white/10 bg-[#080808] px-3 py-3 sm:px-5">
+        <div className="mx-auto flex max-w-[1700px] flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex min-w-0 flex-wrap items-center gap-2.5">
             <Link
               href="/admin/content"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/75 transition hover:border-white/30 hover:text-white"
+              prefetch={false}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-white/15 px-3 text-xs text-white/80 transition hover:border-textGold/60 hover:text-textGold"
             >
               <ArrowLeft size={14} /> Pages
             </Link>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
                 <h1 className="truncate text-sm font-medium sm:text-base">{meta.title}</h1>
                 <code className="hidden rounded bg-white/5 px-2 py-0.5 text-[11px] text-textGold sm:inline">
                   {meta.slug}
@@ -335,100 +338,110 @@ export default function VisualPageEditor({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setSeoOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/80 hover:border-textGold/50 hover:text-textGold"
-            >
-              <Settings2 size={14} /> Page & SEO
-            </button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="scrollbar-none -mx-1 flex items-center gap-2 overflow-x-auto px-1 sm:mx-0 sm:overflow-visible sm:px-0">
+              <button
+                type="button"
+                onClick={() => setSeoOpen(true)}
+                className={`${ADMIN_BTN_SECONDARY} shrink-0 px-3`}
+              >
+                <Settings2 size={14} /> <span>Page &amp; SEO</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setRevisionsOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-xs text-white/80 hover:border-white/35 hover:text-white"
-            >
-              <History size={14} /> History ({initialRevisions.length})
-            </button>
+              <button
+                type="button"
+                onClick={() => setRevisionsOpen(true)}
+                className={`${ADMIN_BTN_SECONDARY} shrink-0 px-3`}
+              >
+                <History size={14} /> <span>History ({initialRevisions.length})</span>
+              </button>
 
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={handleSaveDraft}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-[#141414] px-3.5 py-1.5 text-xs font-medium text-white transition hover:border-textGold hover:text-textGold disabled:opacity-45"
-            >
-              {isPending ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-              Save Draft
-            </button>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handlePreviewTab}
+                className={`${ADMIN_BTN_SECONDARY} shrink-0 px-3`}
+              >
+                <ExternalLink size={14} /> <span>Preview</span>
+              </button>
+            </div>
 
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={handlePreviewTab}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3.5 py-1.5 text-xs text-white/80 hover:border-white/35 hover:text-white disabled:opacity-45"
-            >
-              <ExternalLink size={14} /> Preview Site
-            </button>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handleSaveDraft}
+                className={`${ADMIN_BTN_SECONDARY} px-3.5`}
+              >
+                {isPending ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                <span>Save Draft</span>
+              </button>
 
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={handlePublish}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-textGold px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-black transition hover:bg-white disabled:opacity-45"
-            >
-              {isPending ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />}
-              Publish
-            </button>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={handlePublish}
+                className={`${ADMIN_BTN_PRIMARY} px-4`}
+              >
+                {isPending ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />}
+                <span>Publish</span>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Feedback Toast */}
         {feedback && (
           <div
-            className={`mx-auto mt-2.5 flex max-w-[1700px] items-center justify-between rounded-lg border px-4 py-2 text-xs ${
+            role="status"
+            className={`mx-auto mt-3 flex max-w-[1700px] items-center justify-between gap-2 rounded-lg border px-4 py-2.5 text-xs ${
               feedback.type === "success"
                 ? "border-emerald-500/40 bg-emerald-950/50 text-emerald-200"
                 : "border-red-500/40 bg-red-950/50 text-red-200"
             }`}
           >
             <span>{feedback.text}</span>
-            <button type="button" onClick={() => setFeedback(null)}>
+            <button
+              type="button"
+              onClick={() => setFeedback(null)}
+              aria-label="Dismiss toast"
+              className="inline-flex min-h-9 min-w-9 items-center justify-center rounded hover:bg-white/10"
+            >
               <X size={14} />
             </button>
           </div>
         )}
 
         {/* Mobile Tab Switcher */}
-        <div className="mt-3 flex gap-1.5 lg:hidden">
+        <div className="mt-3 grid grid-cols-3 gap-1.5 lg:hidden">
           {[
             { id: "sections" as const, label: `Sections (${sections.length})` },
-            { id: "edit" as const, label: "Edit Content" },
-            { id: "preview" as const, label: "Live Preview" },
+            { id: "edit" as const, label: "Edit" },
+            { id: "preview" as const, label: "Preview" },
           ].map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setMobileView(tab.id)}
-              className={`flex-1 rounded-lg border py-1.5 text-xs font-medium ${
+              className={`min-h-11 rounded-lg border px-2 text-xs font-medium transition ${
                 mobileView === tab.id
                   ? "border-textGold bg-textGold/15 text-textGold"
-                  : "border-white/10 text-white/60"
+                  : "border-white/10 bg-[#0d0d0d] text-white/65"
               }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
-      </header>
+      </div>
 
-      {/* Main 3-Pane Visual Page Manager Workspace */}
-      <div className="mx-auto grid max-w-[1700px] lg:h-[calc(100vh-68px)] lg:grid-cols-[290px_minmax(0,1fr)_minmax(0,1.05fr)]">
+      {/* Main 3-Pane Workspace */}
+      <div className="mx-auto grid max-w-[1700px] lg:h-[calc(100vh-9.5rem)] lg:grid-cols-[295px_minmax(0,1fr)_minmax(0,1.05fr)]">
         {/* LEFT SIDEBAR: Sections Order & Controls */}
         <aside
           className={`${
-            mobileView === "sections" ? "block" : "hidden"
-          } flex flex-col border-r border-white/10 bg-[#080808] lg:flex lg:overflow-hidden`}
+            mobileView === "sections" ? "flex" : "hidden"
+          } flex-col border-b border-white/10 bg-[#080808] lg:flex lg:overflow-hidden lg:border-b-0 lg:border-r`}
         >
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-textGold">
@@ -437,22 +450,22 @@ export default function VisualPageEditor({
             <button
               type="button"
               onClick={() => setAddModalOpen(true)}
-              className="inline-flex items-center gap-1 rounded-md bg-textGold px-2.5 py-1 text-[11px] font-semibold text-black hover:bg-white"
+              className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-textGold px-3.5 text-xs font-semibold text-black hover:bg-white"
             >
-              <Plus size={13} /> Add
+              <Plus size={14} /> Add
             </button>
           </div>
 
-          <div className="flex-1 space-y-1.5 overflow-y-auto p-3">
+          <div className="flex-1 space-y-2 overflow-y-auto p-3">
             {sections.length === 0 ? (
               <div className="rounded-xl border border-dashed border-white/15 p-6 text-center">
                 <p className="text-xs text-white/55">This page has no sections yet.</p>
                 <button
                   type="button"
                   onClick={() => setAddModalOpen(true)}
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-textGold/50 bg-textGold/10 px-3 py-1.5 text-xs text-textGold"
+                  className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-textGold/50 bg-textGold/10 px-4 text-xs text-textGold"
                 >
-                  <Plus size={13} /> Add First Section
+                  <Plus size={14} /> Add First Section
                 </button>
               </div>
             ) : (
@@ -461,11 +474,11 @@ export default function VisualPageEditor({
                 return (
                   <div
                     key={sec.id}
-                    className={`rounded-xl border p-2.5 transition ${
+                    className={`rounded-xl border p-3 transition ${
                       isSelected
                         ? "border-textGold/70 bg-textGold/10"
                         : "border-white/10 bg-[#0d0d0d] hover:border-white/25"
-                    } ${!sec.is_visible ? "opacity-55" : ""}`}
+                    } ${!sec.is_visible ? "opacity-60" : ""}`}
                   >
                     <button
                       type="button"
@@ -473,46 +486,48 @@ export default function VisualPageEditor({
                         setSelectedId(sec.id);
                         setMobileView("edit");
                       }}
-                      className="w-full text-left"
+                      className="min-h-11 w-full text-left"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[10px] uppercase tracking-[0.14em] text-textGold">
                           {SECTION_LABELS[sec.section_type] || sec.section_type}
                         </span>
                         {!sec.is_visible && (
-                          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] text-white/60">
+                          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] text-white/65">
                             Hidden
                           </span>
                         )}
                       </div>
-                      <p className="mt-0.5 truncate text-xs font-medium text-white">
+                      <p className="mt-0.5 truncate text-sm font-medium text-white">
                         {sec.title || `Section ${idx + 1}`}
                       </p>
                     </button>
 
-                    <div className="mt-2 flex items-center justify-between border-t border-white/5 pt-2">
-                      <div className="flex items-center gap-1">
+                    <div className="mt-2.5 flex flex-wrap items-center justify-between gap-1.5 border-t border-white/5 pt-2.5">
+                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           disabled={idx === 0}
                           onClick={() => handleMoveSection(idx, -1)}
+                          aria-label={`Move ${sec.title} up`}
                           title="Move up"
-                          className="rounded border border-white/10 p-1 text-white/55 hover:text-white disabled:opacity-25"
+                          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/10 text-white/65 hover:border-textGold hover:text-white disabled:opacity-25"
                         >
-                          <ArrowUp size={12} />
+                          <ArrowUp size={14} />
                         </button>
                         <button
                           type="button"
                           disabled={idx === sections.length - 1}
                           onClick={() => handleMoveSection(idx, 1)}
+                          aria-label={`Move ${sec.title} down`}
                           title="Move down"
-                          className="rounded border border-white/10 p-1 text-white/55 hover:text-white disabled:opacity-25"
+                          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/10 text-white/65 hover:border-textGold hover:text-white disabled:opacity-25"
                         >
-                          <ArrowDown size={12} />
+                          <ArrowDown size={14} />
                         </button>
                       </div>
 
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => {
@@ -521,26 +536,29 @@ export default function VisualPageEditor({
                             setSections(next);
                             setIsDirty(true);
                           }}
+                          aria-label={sec.is_visible ? `Hide ${sec.title}` : `Show ${sec.title}`}
                           title={sec.is_visible ? "Hide section" : "Show section"}
-                          className="rounded border border-white/10 p-1 text-white/65 hover:text-textGold"
+                          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/10 text-white/70 hover:text-textGold"
                         >
-                          {sec.is_visible ? <Eye size={12} /> : <EyeOff size={12} />}
+                          {sec.is_visible ? <Eye size={14} /> : <EyeOff size={14} />}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDuplicateSection(idx)}
+                          aria-label={`Duplicate ${sec.title}`}
                           title="Duplicate section"
-                          className="rounded border border-white/10 p-1 text-white/65 hover:text-white"
+                          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/10 text-white/70 hover:text-white"
                         >
-                          <Copy size={12} />
+                          <Copy size={14} />
                         </button>
                         <button
                           type="button"
                           onClick={() => setDeleteConfirmIndex(idx)}
+                          aria-label={`Delete ${sec.title}`}
                           title="Delete section"
-                          className="rounded border border-red-500/25 p-1 text-red-300/75 hover:border-red-500 hover:bg-red-950/40"
+                          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-red-500/30 text-red-300/80 hover:border-red-500 hover:bg-red-950/40"
                         >
-                          <Trash2 size={12} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </div>
@@ -555,12 +573,12 @@ export default function VisualPageEditor({
         <section
           className={`${
             mobileView === "edit" ? "block" : "hidden"
-          } overflow-y-auto border-r border-white/10 bg-[#070707] p-5 lg:block`}
+          } overflow-y-auto overflow-x-hidden border-white/10 bg-[#070707] p-4 sm:p-5 lg:block lg:border-r`}
         >
           {selectedSection ? (
             <div className="mx-auto max-w-2xl space-y-5">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
-                <div>
+              <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 flex-1">
                   <span className="text-[10px] uppercase tracking-[0.2em] text-textGold">
                     Editing {SECTION_LABELS[selectedSection.section_type]}
                   </span>
@@ -569,18 +587,18 @@ export default function VisualPageEditor({
                     value={selectedSection.title}
                     onChange={(e) => updateSelectedSection({ title: e.target.value })}
                     placeholder="Section label (shown in sidebar)"
-                    className="mt-1 block w-full bg-transparent text-xl font-light text-white focus:outline-none"
+                    className="mt-1 block min-h-11 w-full rounded-lg border border-transparent bg-transparent px-2 text-lg font-light text-white focus:border-white/15 focus:bg-[#111] focus:outline-none sm:text-xl"
                   />
                 </div>
 
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-white/15 bg-[#111] px-3 py-1.5 text-xs text-white/80">
+                <label className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 self-start rounded-lg border border-white/15 bg-[#111] px-3.5 text-xs text-white/85 sm:self-auto">
                   <input
                     type="checkbox"
                     checked={selectedSection.is_visible}
                     onChange={(e) => updateSelectedSection({ is_visible: e.target.checked })}
-                    className="accent-[#c9a84c]"
+                    className="h-4 w-4 accent-[#c9a84c]"
                   />
-                  Visible on page
+                  <span>Visible on page</span>
                 </label>
               </div>
 
@@ -593,12 +611,12 @@ export default function VisualPageEditor({
           ) : (
             <div className="flex h-full flex-col items-center justify-center py-20 text-center">
               <p className="text-sm text-white/55">
-                Select a section from the left sidebar or add a new section to begin editing.
+                Select a section or add a new section to begin editing.
               </p>
               <button
                 type="button"
                 onClick={() => setAddModalOpen(true)}
-                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-textGold px-4 py-2 text-xs font-semibold text-black"
+                className={`${ADMIN_BTN_PRIMARY} mt-4`}
               >
                 <Plus size={14} /> Add Section
               </button>
@@ -606,14 +624,14 @@ export default function VisualPageEditor({
           )}
         </section>
 
-        {/* RIGHT PANE: Real-Time Visual Preview of Unsaved Changes */}
+        {/* RIGHT PANE: Real-Time Visual Preview */}
         <section
           className={`${
             mobileView === "preview" ? "flex" : showPreviewPane ? "hidden lg:flex" : "hidden"
           } flex-col overflow-hidden bg-[#121212]`}
         >
-          <div className="flex items-center justify-between border-b border-white/10 bg-[#0b0b0b] px-4 py-2.5">
-            <div className="flex items-center gap-2 text-xs text-white/65">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#0b0b0b] px-4 py-2.5">
+            <div className="flex items-center gap-2 text-xs text-white/70">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
               <span>Live Unsaved Preview</span>
             </div>
@@ -622,10 +640,10 @@ export default function VisualPageEditor({
               <button
                 type="button"
                 onClick={() => setPreviewMode("desktop")}
-                className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-[11px] ${
+                className={`inline-flex min-h-10 items-center gap-1 rounded-md border px-3 text-xs ${
                   previewMode === "desktop"
                     ? "border-textGold/60 bg-textGold/15 text-textGold"
-                    : "border-white/10 text-white/55 hover:text-white"
+                    : "border-white/10 text-white/60 hover:text-white"
                 }`}
               >
                 <Monitor size={13} /> Desktop
@@ -633,10 +651,10 @@ export default function VisualPageEditor({
               <button
                 type="button"
                 onClick={() => setPreviewMode("mobile")}
-                className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-[11px] ${
+                className={`inline-flex min-h-10 items-center gap-1 rounded-md border px-3 text-xs ${
                   previewMode === "mobile"
                     ? "border-textGold/60 bg-textGold/15 text-textGold"
-                    : "border-white/10 text-white/55 hover:text-white"
+                    : "border-white/10 text-white/60 hover:text-white"
                 }`}
               >
                 <Smartphone size={13} /> Mobile
@@ -644,15 +662,16 @@ export default function VisualPageEditor({
               <button
                 type="button"
                 onClick={() => setShowPreviewPane(false)}
-                className="hidden rounded-md border border-white/10 p-1 text-white/45 hover:text-white lg:inline-flex"
+                className="hidden min-h-10 min-w-10 items-center justify-center rounded-md border border-white/10 text-white/50 hover:text-white lg:inline-flex"
                 title="Collapse preview panel"
+                aria-label="Collapse preview panel"
               >
-                <X size={13} />
+                <X size={14} />
               </button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto bg-[#030303] p-3">
+          <div className="flex-1 overflow-y-auto bg-[#030303] p-2 sm:p-3">
             <div
               className={`min-h-full overflow-x-hidden rounded-xl border border-white/15 bg-background shadow-2xl transition-all duration-300 ${
                 previewMode === "mobile" ? "mx-auto w-[390px] max-w-full" : "w-full"
@@ -672,7 +691,7 @@ export default function VisualPageEditor({
         <button
           type="button"
           onClick={() => setShowPreviewPane(true)}
-          className="fixed bottom-5 right-5 z-40 hidden items-center gap-2 rounded-full border border-textGold bg-black px-4 py-2.5 text-xs font-medium text-textGold shadow-xl hover:bg-textGold hover:text-black lg:inline-flex"
+          className="fixed bottom-5 right-5 z-40 hidden min-h-11 items-center gap-2 rounded-full border border-textGold bg-black px-4 text-xs font-medium text-textGold shadow-xl hover:bg-textGold hover:text-black lg:inline-flex"
         >
           <Monitor size={14} /> Show Live Preview
         </button>
@@ -704,43 +723,21 @@ export default function VisualPageEditor({
         busy={isPending}
       />
 
-      {/* Delete Section Confirmation Modal */}
-      {deleteConfirmIndex !== null && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="w-full max-w-md rounded-2xl border border-white/15 bg-[#0a0a0a] p-6 text-white">
-            <div className="flex items-start gap-3">
-              <AlertTriangle size={20} className="mt-0.5 shrink-0 text-amber-400" />
-              <div>
-                <h3 className="text-base font-medium">Remove Section?</h3>
-                <p className="mt-1 text-xs leading-5 text-white/60">
-                  Remove &ldquo;{sections[deleteConfirmIndex]?.title || "this section"}&rdquo; from
-                  your draft? Live pages remain unaffected until you publish.
-                </p>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setDeleteConfirmIndex(null)}
-                className="rounded-lg border border-white/15 px-4 py-2 text-xs text-white/75"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDeleteSection(deleteConfirmIndex)}
-                className="rounded-lg bg-red-600 px-4 py-2 text-xs font-medium text-white hover:bg-red-500"
-              >
-                Remove Section
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AdminConfirmDialog
+        isOpen={deleteConfirmIndex !== null}
+        onClose={() => setDeleteConfirmIndex(null)}
+        onConfirm={() => {
+          if (deleteConfirmIndex !== null) handleDeleteSection(deleteConfirmIndex);
+        }}
+        title="Remove Section?"
+        description={
+          deleteConfirmIndex !== null
+            ? `Remove "${sections[deleteConfirmIndex]?.title || "this section"}" from your draft? Live pages stay unchanged until you publish.`
+            : undefined
+        }
+        confirmLabel="Remove Section"
+        tone="danger"
+      />
     </div>
   );
 }

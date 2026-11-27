@@ -49,7 +49,7 @@ export async function signIn(formData: FormData) {
   }
 
   clearAdminSessionCache();
-  redirect("/admin/products");
+  redirect("/admin");
 }
 
 export async function signOut() {

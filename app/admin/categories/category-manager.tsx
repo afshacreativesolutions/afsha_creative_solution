@@ -1,10 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { FileEdit, FolderTree, Plus, Power } from "lucide-react";
+import AdminCard from "@/components/admin/AdminCard";
+import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
+import AdminEmptyState from "@/components/admin/AdminEmptyState";
+import {
+  ADMIN_BTN_OUTLINE_GOLD,
+  ADMIN_BTN_PRIMARY,
+  ADMIN_BTN_SECONDARY,
+  ADMIN_INPUT_CLASS,
+  ADMIN_LABEL_CLASS,
+} from "@/components/admin/admin-styles";
+import type { CategoryRecord } from "@/lib/catalog-types";
+import { slugify } from "@/lib/slug";
 import { saveCategory, setCategoryActive } from "../actions";
 import { SubmitButton } from "../submit-button";
-import { slugify } from "@/lib/slug";
-import type { CategoryRecord } from "@/lib/catalog-types";
 
 export default function CategoryManager({
   categories,
@@ -14,16 +25,16 @@ export default function CategoryManager({
   saved: boolean;
 }) {
   const [editing, setEditing] = useState<string | null>(null);
-
-  // Add Category State
   const [addName, setAddName] = useState("");
   const [addSlug, setAddSlug] = useState("");
   const [addSlugManual, setAddSlugManual] = useState(false);
 
-  // Edit Category State
   const [editName, setEditName] = useState("");
   const [editSlug, setEditSlug] = useState("");
   const [editSlugManual, setEditSlugManual] = useState(false);
+
+  const [deactivateTarget, setDeactivateTarget] = useState<CategoryRecord | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   function startEditing(category: CategoryRecord) {
     setEditing(category.id);
@@ -32,23 +43,32 @@ export default function CategoryManager({
     setEditSlugManual(true);
   }
 
-  const field =
-    "mt-2 w-full border border-white/12 bg-[#080808] px-3 py-2.5 text-sm text-white outline-none focus:border-textGold/60";
+  function handleDeactivateConfirm() {
+    if (!deactivateTarget) return;
+    const fd = new FormData();
+    fd.set("id", deactivateTarget.id);
+    fd.set("active", String(!deactivateTarget.is_active));
+    startTransition(async () => {
+      await setCategoryActive(fd);
+      setDeactivateTarget(null);
+    });
+  }
 
   return (
-    <>
+    <div className="space-y-6">
       {saved && (
-        <p role="status" className="mb-5 text-sm text-emerald-300">
-          Category saved.
+        <p
+          role="status"
+          className="rounded-xl border border-emerald-500/35 bg-emerald-950/30 px-4 py-3 text-xs text-emerald-200 sm:text-sm"
+        >
+          Category changes saved successfully.
         </p>
       )}
 
-      {/* Add Category Section */}
-      <section className="mb-8 border border-white/10 bg-[#080808] p-5 sm:p-7">
-        <h2 className="mb-5 text-xl font-light">Add category</h2>
+      <AdminCard title="Add Category" eyebrow="New Collection">
         <form action={saveCategory} className="grid gap-4 sm:grid-cols-2">
-          <label className="text-[10px] uppercase tracking-[0.14em] text-white/50">
-            Name *
+          <div>
+            <label className={ADMIN_LABEL_CLASS}>Name *</label>
             <input
               name="name"
               required
@@ -58,14 +78,16 @@ export default function CategoryManager({
                 setAddName(val);
                 if (!addSlugManual) setAddSlug(slugify(val));
               }}
-              className={field}
+              className={ADMIN_INPUT_CLASS}
               placeholder="Gates"
             />
-          </label>
+          </div>
 
-          <label className="text-[10px] uppercase tracking-[0.14em] text-white/50">
-            <div className="flex items-center justify-between">
-              <span>Slug *</span>
+          <div>
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <label className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/60">
+                Slug *
+              </label>
               {addSlugManual && (
                 <button
                   type="button"
@@ -73,7 +95,7 @@ export default function CategoryManager({
                     setAddSlug(slugify(addName));
                     setAddSlugManual(false);
                   }}
-                  className="text-[9px] font-normal lowercase tracking-normal text-textGold hover:underline"
+                  className="text-[11px] text-textGold hover:underline"
                 >
                   Auto-sync from name
                 </button>
@@ -88,184 +110,222 @@ export default function CategoryManager({
                 setAddSlugManual(true);
                 setAddSlug(slugify(e.target.value));
               }}
-              className={field}
+              className={ADMIN_INPUT_CLASS}
               placeholder="gates"
             />
-          </label>
+          </div>
 
-          <label className="text-[10px] uppercase tracking-[0.14em] text-white/50">
-            Description
-            <input name="description" className={field} />
-          </label>
+          <div>
+            <label className={ADMIN_LABEL_CLASS}>Description</label>
+            <input name="description" className={ADMIN_INPUT_CLASS} placeholder="Optional summary" />
+          </div>
 
-          <label className="text-[10px] uppercase tracking-[0.14em] text-white/50">
-            Sort order
+          <div>
+            <label className={ADMIN_LABEL_CLASS}>Sort Order</label>
             <input
               name="sort_order"
               type="number"
+              inputMode="numeric"
               defaultValue={categories.length + 1}
-              className={field}
+              className={ADMIN_INPUT_CLASS}
             />
-          </label>
+          </div>
 
-          <label className="flex items-center gap-3 text-sm text-white/65">
-            <input
-              name="is_active"
-              type="checkbox"
-              defaultChecked
-              className="accent-[#CDA274]"
-            />{" "}
-            Active
+          <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-[#121212] px-3.5 text-sm text-white/80">
+            <input name="is_active" type="checkbox" defaultChecked className="h-4 w-4 accent-[#CDA274]" />
+            <span>Active on storefront</span>
           </label>
 
           <div className="flex items-end justify-end">
             <SubmitButton
               loadingText="Adding..."
-              className="border border-textGold/60 px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-textGold hover:bg-textGold hover:text-black transition-colors disabled:opacity-40"
+              className={`${ADMIN_BTN_PRIMARY} w-full sm:w-auto`}
             >
-              Add category
+              <Plus size={15} />
+              <span>Add Category</span>
             </SubmitButton>
           </div>
         </form>
-      </section>
+      </AdminCard>
 
-      {/* Category List */}
-      <div className="space-y-4">
-        {categories.map((category) => (
-          <section
-            key={category.id}
-            className="border border-white/10 bg-[#080808] p-5 sm:p-6"
-          >
-            {editing === category.id ? (
-              <form action={saveCategory} className="grid gap-4 sm:grid-cols-2">
-                <input type="hidden" name="id" value={category.id} />
+      {categories.length === 0 ? (
+        <AdminEmptyState
+          icon={<FolderTree size={28} />}
+          title="No categories configured"
+          description="Use the form above to add your first fabrication category."
+        />
+      ) : (
+        <div className="space-y-3">
+          {categories.map((category) => (
+            <section
+              key={category.id}
+              className="rounded-xl border border-white/10 bg-[#0d0d0d] p-4 sm:p-5"
+            >
+              {editing === category.id ? (
+                <form action={saveCategory} className="grid gap-4 sm:grid-cols-2">
+                  <input type="hidden" name="id" value={category.id} />
 
-                <label className="text-[10px] uppercase tracking-[0.14em] text-white/50">
-                  Name *
-                  <input
-                    name="name"
-                    required
-                    value={editName}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setEditName(val);
-                      if (!editSlugManual) setEditSlug(slugify(val));
-                    }}
-                    className={field}
-                  />
-                </label>
-
-                <label className="text-[10px] uppercase tracking-[0.14em] text-white/50">
-                  <div className="flex items-center justify-between">
-                    <span>Slug *</span>
-                    {editSlugManual && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditSlug(slugify(editName));
-                          setEditSlugManual(false);
-                        }}
-                        className="text-[9px] font-normal lowercase tracking-normal text-textGold hover:underline"
-                      >
-                        Auto-sync from name
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    name="slug"
-                    required
-                    pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-                    value={editSlug}
-                    onChange={(e) => {
-                      setEditSlugManual(true);
-                      setEditSlug(slugify(e.target.value));
-                    }}
-                    className={field}
-                  />
-                </label>
-
-                <label className="text-[10px] uppercase tracking-[0.14em] text-white/50">
-                  Description
-                  <input
-                    name="description"
-                    defaultValue={category.description ?? ""}
-                    className={field}
-                  />
-                </label>
-
-                <label className="text-[10px] uppercase tracking-[0.14em] text-white/50">
-                  Sort order
-                  <input
-                    name="sort_order"
-                    type="number"
-                    defaultValue={category.sort_order}
-                    className={field}
-                  />
-                </label>
-
-                <label className="flex items-center gap-3 text-sm text-white/65">
-                  <input
-                    name="is_active"
-                    type="checkbox"
-                    defaultChecked={category.is_active}
-                    className="accent-[#CDA274]"
-                  />{" "}
-                  Active
-                </label>
-
-                <div className="flex items-end justify-end gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setEditing(null)}
-                    className="text-xs text-white/45 hover:text-white"
-                  >
-                    Cancel
-                  </button>
-                  <SubmitButton
-                    loadingText="Saving..."
-                    className="border border-textGold/60 px-5 py-3 text-[10px] uppercase tracking-[0.15em] text-textGold hover:bg-textGold hover:text-black transition-colors disabled:opacity-40"
-                  >
-                    Save
-                  </SubmitButton>
-                </div>
-              </form>
-            ) : (
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-light">{category.name}</h3>
-                  <p className="mt-1 text-xs text-white/40">
-                    /{category.slug} · order {category.sort_order} ·{" "}
-                    {category.is_active ? "Active" : "Inactive"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => startEditing(category)}
-                    className="text-xs text-textGold hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <form action={setCategoryActive}>
-                    <input type="hidden" name="id" value={category.id} />
+                  <div>
+                    <label className={ADMIN_LABEL_CLASS}>Name *</label>
                     <input
-                      type="hidden"
-                      name="active"
-                      value={String(!category.is_active)}
+                      name="name"
+                      required
+                      value={editName}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditName(val);
+                        if (!editSlugManual) setEditSlug(slugify(val));
+                      }}
+                      className={ADMIN_INPUT_CLASS}
                     />
-                    <SubmitButton
-                      loadingText="..."
-                      className="text-xs text-white/45 hover:text-white disabled:opacity-40"
+                  </div>
+
+                  <div>
+                    <div className="mb-1.5 flex items-center justify-between gap-2">
+                      <label className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/60">
+                        Slug *
+                      </label>
+                      {editSlugManual && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditSlug(slugify(editName));
+                            setEditSlugManual(false);
+                          }}
+                          className="text-[11px] text-textGold hover:underline"
+                        >
+                          Auto-sync from name
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      name="slug"
+                      required
+                      pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+                      value={editSlug}
+                      onChange={(e) => {
+                        setEditSlugManual(true);
+                        setEditSlug(slugify(e.target.value));
+                      }}
+                      className={ADMIN_INPUT_CLASS}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={ADMIN_LABEL_CLASS}>Description</label>
+                    <input
+                      name="description"
+                      defaultValue={category.description ?? ""}
+                      className={ADMIN_INPUT_CLASS}
+                    />
+                  </div>
+
+                  <div>
+                    <label className={ADMIN_LABEL_CLASS}>Sort Order</label>
+                    <input
+                      name="sort_order"
+                      type="number"
+                      inputMode="numeric"
+                      defaultValue={category.sort_order}
+                      className={ADMIN_INPUT_CLASS}
+                    />
+                  </div>
+
+                  <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-[#121212] px-3.5 text-sm text-white/80">
+                    <input
+                      name="is_active"
+                      type="checkbox"
+                      defaultChecked={category.is_active}
+                      className="h-4 w-4 accent-[#CDA274]"
+                    />
+                    <span>Active</span>
+                  </label>
+
+                  <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setEditing(null)}
+                      className={`${ADMIN_BTN_SECONDARY} w-full sm:w-auto`}
                     >
-                      {category.is_active ? "Deactivate" : "Activate"}
+                      Cancel
+                    </button>
+                    <SubmitButton
+                      loadingText="Saving..."
+                      className={`${ADMIN_BTN_PRIMARY} w-full sm:w-auto`}
+                    >
+                      Save Changes
                     </SubmitButton>
-                  </form>
+                  </div>
+                </form>
+              ) : (
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-base font-medium text-white sm:text-lg">
+                        {category.name}
+                      </h3>
+                      <span
+                        className={`rounded border px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] ${
+                          category.is_active
+                            ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-300"
+                            : "border-white/15 bg-white/5 text-white/55"
+                        }`}
+                      >
+                        {category.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-white/50">
+                      /{category.slug} · sort order {category.sort_order}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:items-center">
+                    <button
+                      type="button"
+                      onClick={() => startEditing(category)}
+                      className={`${ADMIN_BTN_OUTLINE_GOLD} px-3.5`}
+                    >
+                      <FileEdit size={14} />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => {
+                        if (category.is_active) {
+                          setDeactivateTarget(category);
+                        } else {
+                          const fd = new FormData();
+                          fd.set("id", category.id);
+                          fd.set("active", "true");
+                          startTransition(async () => {
+                            await setCategoryActive(fd);
+                          });
+                        }
+                      }}
+                      className={`${ADMIN_BTN_SECONDARY} px-3.5`}
+                    >
+                      <Power size={14} />
+                      <span>{category.is_active ? "Deactivate" : "Activate"}</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </section>
-        ))}
-      </div>
-    </>
+              )}
+            </section>
+          ))}
+        </div>
+      )}
+
+      <AdminConfirmDialog
+        isOpen={deactivateTarget !== null}
+        onClose={() => setDeactivateTarget(null)}
+        onConfirm={handleDeactivateConfirm}
+        title={deactivateTarget ? `Deactivate "${deactivateTarget.name}"?` : "Deactivate Category?"}
+        description="Deactivated categories are hidden from public category menus while preserving product associations."
+        confirmLabel="Deactivate"
+        tone="danger"
+        busy={isPending}
+      />
+    </div>
   );
 }

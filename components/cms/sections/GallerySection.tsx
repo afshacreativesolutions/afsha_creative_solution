@@ -1,4 +1,5 @@
 import GalleryLightbox, { type GalleryItem } from "@/components/GalleryLightbox";
+import LeadEnquiryForm from "@/components/lead/LeadEnquiryForm";
 import { resolveCmsImageSrc } from "@/lib/cms/media";
 import { images } from "@/utils/images";
 import type { ProductRecord } from "@/lib/catalog-types";
@@ -80,6 +81,14 @@ export default function GallerySection({
       )}
 
       <GalleryLightbox items={allGalleryItems} categories={content.filterCategories} />
+
+      <div id="gallery-enquiry" className="mt-14 scroll-mt-20 border-t border-white/10 pt-12">
+        <LeadEnquiryForm
+          placement="gallery_page"
+          heading="Want a Similar Custom Gate or Railing?"
+          subheading="Select your preferred category, share your site city, and optionally attach a photo or sketch."
+        />
+      </div>
     </section>
   );
 }

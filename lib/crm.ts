@@ -8,8 +8,6 @@ import {
   ConsentRecord,
   MarketingCampaignRecord,
   MessageLogRecord,
-  VisitorRecord,
-  LeadStatus,
 } from "./crm-types";
 
 let overviewStatsCache: {
@@ -163,6 +161,8 @@ export async function getAdminOverviewStats() {
 export async function getAdminLeads(options?: {
   status?: string;
   search?: string;
+  service?: string;
+  dateRange?: string;
 }) {
   const supabase = (await createSupabaseServerClient()) || createSupabaseServiceClient();
   if (!supabase) return [];
@@ -184,6 +184,7 @@ export async function getAdminLeads(options?: {
         message,
         internal_notes,
         follow_up_date,
+        attribution,
         created_at,
         customer_id,
         customer:customers (
@@ -201,7 +202,24 @@ export async function getAdminLeads(options?: {
       query = query.eq("status", options.status);
     }
 
-    const { data, error } = await query.limit(100);
+    if (options?.service && options.service !== "all") {
+      query = query.eq("category_slug", options.service);
+    }
+
+    if (options?.dateRange && options.dateRange !== "all") {
+      const now = new Date();
+      const since = new Date(now);
+      if (options.dateRange === "today") {
+        since.setHours(0, 0, 0, 0);
+      } else if (options.dateRange === "7d") {
+        since.setDate(since.getDate() - 7);
+      } else if (options.dateRange === "30d") {
+        since.setDate(since.getDate() - 30);
+      }
+      query = query.gte("created_at", since.toISOString());
+    }
+
+    const { data, error } = await query.limit(200);
     if (error) {
       console.warn("getAdminLeads error:", error.message);
       return [];
@@ -215,7 +233,12 @@ export async function getAdminLeads(options?: {
         const name = lead.customer?.name?.toLowerCase() || "";
         const phone = lead.customer?.phone || "";
         const ref = lead.reference_number.toLowerCase();
-        return name.includes(q) || phone.includes(q) || ref.includes(q);
+        const city =
+          (lead.city ||
+            (typeof lead.attribution?.city === "string" ? lead.attribution.city : "") ||
+            lead.customer?.city ||
+            "").toLowerCase();
+        return name.includes(q) || phone.includes(q) || ref.includes(q) || city.includes(q);
       });
     }
 
@@ -223,6 +246,27 @@ export async function getAdminLeads(options?: {
   } catch (err) {
     console.warn("getAdminLeads exception:", err);
     return [];
+  }
+}
+
+export async function getAdminLeadPipelineCounts() {
+  const supabase = (await createSupabaseServerClient()) || createSupabaseServiceClient();
+  const empty = { total: 0, new: 0, contacted: 0, quoted: 0, won: 0 };
+  if (!supabase) return empty;
+
+  try {
+    const { data, error } = await supabase.from("leads").select("status").limit(1000);
+    if (error || !data) return empty;
+    const counts = { total: data.length, new: 0, contacted: 0, quoted: 0, won: 0 };
+    for (const row of data as Array<{ status: string }>) {
+      if (row.status === "new") counts.new++;
+      else if (row.status === "contacted") counts.contacted++;
+      else if (row.status === "quote_sent" || row.status === "qualified") counts.quoted++;
+      else if (row.status === "won") counts.won++;
+    }
+    return counts;
+  } catch {
+    return empty;
   }
 }
 
@@ -244,7 +288,25 @@ export async function getAdminLeadById(id: string): Promise<LeadRecord | null> {
       .maybeSingle();
 
     if (error || !data) return null;
-    return data as unknown as LeadRecord;
+    const lead = data as unknown as LeadRecord;
+
+    const attachmentPath =
+      lead.attachment_path ||
+      (typeof lead.attribution?.attachment_path === "string"
+        ? lead.attribution.attachment_path
+        : null);
+
+    if (attachmentPath) {
+      const service = createSupabaseServiceClient() || supabase;
+      const { data: signed } = await service.storage
+        .from("lead-attachments")
+        .createSignedUrl(attachmentPath, 3600);
+      if (signed?.signedUrl) {
+        lead.attachmentSignedUrl = signed.signedUrl;
+      }
+    }
+
+    return lead;
   } catch (err) {
     console.warn("getAdminLeadById exception:", err);
     return null;

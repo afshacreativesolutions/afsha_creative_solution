@@ -7,7 +7,10 @@ import PageHero from "@/components/PageHero";
 import SectionHeading from "@/components/SectionHeading";
 import CTASection from "@/components/CTASection";
 import JsonLd from "@/components/JsonLd";
+import LeadEnquiryForm from "@/components/lead/LeadEnquiryForm";
+import OpenQuoteButton from "@/components/lead/OpenQuoteButton";
 import CMSPageRenderer from "@/components/cms/CMSPageRenderer";
+import FAQSection from "@/components/cms/sections/FAQSection";
 import { getPublicCategories, getPublicProducts } from "@/lib/catalog";
 import { getCmsPageForRender, getPublishedCmsSiteSettings } from "@/lib/cms/queries";
 import { buildCmsPageMetadata } from "@/lib/cms/seo";
@@ -152,16 +155,30 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
 
       {/* Products & Designs Section */}
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20">
-        <SectionHeading
-          eyebrow={tpl.portfolioEyebrow}
-          title={`${category.name} Portfolio`}
-          description={tpl.portfolioDescription}
-        />
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeading
+            eyebrow={tpl.portfolioEyebrow}
+            title={`${category.name} Portfolio`}
+            description={tpl.portfolioDescription}
+          />
+          <OpenQuoteButton
+            label={`Quote for ${category.name}`}
+            prefill={{
+              title: `Quote: ${category.name}`,
+              categorySlug: category.slug,
+              placement: "category_page",
+            }}
+            className="w-full shrink-0 sm:w-auto"
+          />
+        </div>
 
         {categoryProducts.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {categoryProducts.map((product) => {
+            {categoryProducts.map((product, idx) => {
               const image = product.images.find((item) => item.is_primary) ?? product.images[0];
+              const fallbackItem = fallbackCategoryImages[idx % fallbackCategoryImages.length];
+              const displayImage = image?.url || fallbackItem?.img;
+
               return (
                 <Link
                   key={product.id}
@@ -169,12 +186,12 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
                   className="group flex flex-col justify-between overflow-hidden rounded-xl border border-white/10 bg-[#080808] transition duration-300 hover:border-textGold/40"
                 >
                   <div className="relative aspect-[0.91] overflow-hidden bg-[#111]">
-                    {image?.url && (
+                    {displayImage && (
                       <Image
-                        src={image.url}
-                        alt={image.alt_text || product.name}
+                        src={displayImage}
+                        alt={image?.alt_text || product.name}
                         fill
-                        unoptimized
+                        unoptimized={typeof displayImage === "string" && displayImage.startsWith("http")}
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       />
@@ -227,20 +244,80 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
                   </h3>
                 </div>
 
-                <div className="mt-6 pt-3 border-t border-white/10">
-                  <Link
-                    href={`/custom-metalwork?category=${slug}`}
-                    className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.16em] text-textGold hover:text-white transition"
-                  >
-                    <span>Request Similar Design</span>
-                    <ArrowRight size={13} />
-                  </Link>
+                <div className="mt-6 border-t border-white/10 pt-3">
+                  <OpenQuoteButton
+                    label="Request Similar Design"
+                    variant="outline"
+                    className="w-full"
+                    prefill={{
+                      title: `Quote: ${item.title}`,
+                      subtitle: `${category.name} · ${item.mat}`,
+                      productName: item.title,
+                      categorySlug: category.slug,
+                      placement: "category_card",
+                    }}
+                  />
                 </div>
               </div>
             ))}
           </div>
         )}
       </section>
+
+      <section
+        id="category-enquiry"
+        aria-label={`Get a quote for ${category.name}`}
+        className="mx-auto max-w-5xl scroll-mt-20 border-t border-white/10 px-4 py-10 sm:px-6 sm:py-16"
+      >
+        <LeadEnquiryForm
+          categories={categories.map(({ slug: catSlug, name }) => ({ slug: catSlug, name }))}
+          defaultCategory={category.slug}
+          placement="category_page"
+          whatsappNumber={siteSettings.site_identity.whatsappNumber}
+          heading={`Get a Custom Quote for ${category.name}`}
+          subheading="Tell us your required size, city, and design preference for a fast estimate."
+        />
+      </section>
+
+      <div className="border-t border-white/10">
+        <FAQSection
+          content={{
+            sectionId: "category-faq",
+            variant: "compact_home",
+            eyebrow: "Fabrication FAQs",
+            heading: `Questions About ${category.name}`,
+            description:
+              "Details on custom dimensions, site survey, and workshop finish quality.",
+            link: { label: "All FAQs", href: "/faqs" },
+            items: [
+              {
+                category: "pricing",
+                question: `How do I request an estimate for ${category.name}?`,
+                answer:
+                  "Submit your name, WhatsApp number, city, and approximate opening width and height in the form above, or message us directly on WhatsApp.",
+              },
+              {
+                category: "customization",
+                question: `Are your ${category.name.toLowerCase()} fabricated in custom sizes?`,
+                answer:
+                  "Yes. Every piece is measured and built for your site layout rather than sold in rigid stock sizes.",
+              },
+              {
+                category: "process",
+                question: "Can I upload a reference image or site photo?",
+                answer:
+                  "Yes. You can attach a JPG, PNG, or WebP site photo or sketch directly in the quote form above.",
+              },
+              {
+                category: "delivery",
+                question: "Where do you provide installation services?",
+                answer:
+                  "Our fabrication workshop is in Moradabad, UP, serving homeowners, contractors, and architects across Moradabad, Rampur, Sambhal, Amroha, Bareilly, and nearby NCR.",
+              },
+            ],
+          }}
+        />
+      </div>
 
       <CTASection
         eyebrow={`Custom ${category.name}`}

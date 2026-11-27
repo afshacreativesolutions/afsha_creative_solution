@@ -320,62 +320,66 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
         is_visible: true,
         content: {
           variant: "fullscreen_video",
-          eyebrow: "THE ART OF CUSTOM METALWORK",
+          eyebrow: "CUSTOM METAL GATES, RAILINGS & STEEL DOORS · MORADABAD",
           heading: "AFSHA",
           subtitle:
-            "BESPOKE METAL FABRICATION & ARCHITECTURAL RAILINGS\nCRAFTED FOR ELEGANCE. BUILT FOR LIFE.",
-          description: "Premium Custom Metal Gates & Architectural Metalwork",
+            "CUSTOM METAL GATES, SLIDING GATES & ARCHITECTURAL RAILINGS\nBUILT FOR SECURITY. CRAFTED FOR LIFE.",
+          description:
+            "Custom Metal Gates, Sliding Gates, Folding Gates, Railings & Steel Doors in Moradabad",
           videoDesktopWebm: "/videos/hero-desktop.webm",
           videoDesktopMp4: "/videos/hero-desktop.mp4",
           videoMobileMp4: "/videos/hero-mobile.mp4",
           videoPoster: "/videos/hero-poster.webp",
-          primaryButton: { label: "Explore Collection", href: "#collection" },
-          secondaryButton: { label: "Book Consultation", href: "/contact" },
+          primaryButton: { label: "Get a Free Quote", href: "#quote-modal" },
+          secondaryButton: {
+            label: "WhatsApp Us",
+            href: "https://wa.me/919634776691?text=Hello%20Afsha%20Creative%20Solution%2C%20I%20would%20like%20a%20free%20quote%20for%20custom%20metal%20fabrication.",
+          },
           scrollAnchorLabel: "SCROLL TO EXPLORE",
         },
       },
       {
         section_key: "home-collection-overview",
         section_type: "card_grid",
-        title: "Metalwork Collection Overview",
+        title: "Popular Products & Fabrication Services",
         sort_order: 1,
         is_visible: true,
         content: {
           variant: "numbered_collection",
           background: "default",
           eyebrow: "Made to measure · Moradabad, India",
-          heading: "Explore Our Metalwork Collection",
+          heading: "Popular Metalwork Products & Services",
           description:
-            "Afsha Creative Solution creates custom metal gates, iron gates, steel gates, architectural railings, balcony railings, and decorative metal grills in Moradabad. Every design is made to measure for Indian homes and commercial spaces.",
+            "Afsha Creative Solution fabricates custom main gates, sliding gates, folding gates, steel security doors, stair & balcony railings, and decorative metal grills across Moradabad and Western UP.",
           headerLink: { label: "Explore all products", href: "/products" },
           columns: 3,
           cards: [
             {
               id: "overview-1",
               number: "01",
-              title: "Custom Main Gate Designs",
+              title: "Main, Sliding & Folding Gates",
               description:
-                "Iron and steel gates shaped around your entrance, security needs, and architectural style.",
+                "Heavy-gauge iron and 304 stainless steel entrance gates—swing, sliding, and motorized options engineered for strength and curb appeal.",
               link: "/products?category=gates",
               buttonText: "Explore gates",
             },
             {
               id: "overview-2",
               number: "02",
-              title: "Premium Metal Railings",
+              title: "Stair, Balcony & Spiral Railings",
               description:
-                "Made-to-measure railings for staircases, balconies, and terraces in durable finishes.",
+                "Precision-finished stainless steel, wrought iron, and brass-accented railings tailored to exact floor slopes and safety heights.",
               link: "/products?category=stair-railings",
               buttonText: "Explore railings",
             },
             {
               id: "overview-3",
               number: "03",
-              title: "Decorative Metal Grills",
+              title: "Steel Doors, Grills & Custom Work",
               description:
-                "Distinctive metalwork for windows, partitions, and feature screens, finished to suit your space.",
-              link: "/products",
-              buttonText: "View designs",
+                "Reinforced steel safety doors, CNC laser-cut panels, window security grills, and bespoke architectural metalwork built to order.",
+              link: "/custom-metalwork",
+              buttonText: "View custom options",
             },
           ],
         },
@@ -383,13 +387,13 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
       {
         section_key: "home-featured-projects",
         section_type: "product_category_grid",
-        title: "Featured Projects Carousel",
+        title: "Featured Completed Projects",
         sort_order: 2,
         is_visible: true,
         content: {
           variant: "featured_carousel",
           sectionId: "projects",
-          heading: "Featured Projects",
+          heading: "Featured Completed Projects",
           cta: { label: "SEE PROJECTS", href: "/products" },
           maxItems: 10,
         },
@@ -407,45 +411,95 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
         },
       },
       {
+        section_key: "home-why-choose-us",
+        section_type: "card_grid",
+        title: "Why Choose Afsha Creative Solution",
+        sort_order: 4,
+        is_visible: true,
+        content: {
+          variant: "numbered_cards",
+          background: "default",
+          eyebrow: "Why homeowners & contractors trust our workshop",
+          heading: "Built Strong. Finished Clean. Fitted on Time.",
+          description:
+            "Every gate, door, and railing is fabricated directly at our Moradabad facility using verified metal gauges and multi-stage rust protection.",
+          columns: 4,
+          cards: [
+            {
+              id: "why-1",
+              number: "01",
+              eyebrow: "EXACT FIT",
+              title: "On-Site Measurement",
+              description:
+                "We take laser and physical opening measurements on-site so every gate leaf and railing post aligns without gaps.",
+            },
+            {
+              id: "why-2",
+              number: "02",
+              eyebrow: "DURABLE METALS",
+              title: "Genuine Heavy-Gauge",
+              description:
+                "We build with grade-verified 304 stainless steel, solid wrought iron, and heavy mild steel tubing for everyday security.",
+            },
+            {
+              id: "why-3",
+              number: "03",
+              eyebrow: "WEATHER PROTECTION",
+              title: "Rust-Resistant Finishing",
+              description:
+                "Deep weld grinding, zinc-rich primers, polyurethane coats, and satin hairline steel finishes built for Indian monsoons.",
+            },
+            {
+              id: "why-4",
+              number: "04",
+              eyebrow: "DIRECT WORKSHOP",
+              title: "Transparent Pricing & Fitting",
+              description:
+                "No middleman markups—work directly with our fabricators from initial quote to site delivery and clean fitting.",
+            },
+          ],
+        },
+      },
+      {
         section_key: "home-fabrication-process",
         section_type: "features",
         title: "Made-to-Measure Fabrication Process",
-        sort_order: 4,
+        sort_order: 5,
         is_visible: true,
         content: {
           variant: "process_with_callout",
           background: "darker",
-          eyebrow: "From first sketch to final fit",
+          eyebrow: "How our process works",
           heading: "Made-to-Measure Metal Fabrication",
           description:
             "Every project starts with your space and how you want to use it. We guide the details from measurements and material choices through fabrication and installation.",
           items: [
             {
               number: "01",
-              title: "Understand your space",
-              description: "We discuss the location, design, size, and needs of your project.",
+              title: "Share requirement & photo",
+              description: "Send your approximate size, product choice, or site photo for a free estimate.",
             },
             {
               number: "02",
-              title: "Plan the details",
-              description: "Choose materials, finishes, and custom details with our team.",
+              title: "Site check & material selection",
+              description: "We confirm measurements, iron/steel gauge, hinge or sliding track, and finish.",
             },
             {
               number: "03",
-              title: "Craft with care",
-              description: "Your metalwork is fabricated to the agreed design and measurements.",
+              title: "Precision workshop fabrication",
+              description: "Crafted, welded, ground smooth, and rust-proofed at our Moradabad workshop.",
             },
             {
               number: "04",
-              title: "Complete your project",
-              description: "We coordinate finishing and installation around your project needs.",
+              title: "Delivery & site installation",
+              description: "Coordinated transport and sturdy installation with final alignment checks.",
             },
           ],
           callout: {
-            eyebrow: "Our craftsmanship",
-            text: "Traditional metalworking skills meet modern architectural design—creating gates and railings made for everyday use.",
-            buttonLabel: "Discuss your project",
-            buttonHref: "/contact",
+            eyebrow: "Ready to start?",
+            text: "Get honest workshop advice on gate strength, motorized sliding clearance, or staircase safety—with zero obligation.",
+            buttonLabel: "Request Free Quote",
+            buttonHref: "#quote-section",
           },
         },
       },
@@ -453,7 +507,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
         section_key: "home-artisans-videos",
         section_type: "image_text",
         title: "The Artisans of Metalwork (Video Showcase)",
-        sort_order: 5,
+        sort_order: 6,
         is_visible: true,
         content: {
           variant: "video_showcase",
@@ -466,40 +520,27 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
           videoPrimaryPoster: "/videos/Process/process-poster.webp",
           videoSecondaryUrl: "/videos/Products/products-video.mp4",
           videoSecondaryPoster: "/videos/Products/products-poster.webp",
-          cta: { label: "OUR ARTISANS", href: "/contact" },
+          cta: { label: "GET A QUOTE", href: "#quote-section" },
         },
       },
       {
         section_key: "home-testimonials",
         section_type: "testimonials",
         title: "Customer Testimonials & Statistics",
-        sort_order: 6,
+        sort_order: 7,
         is_visible: true,
         content: {
           sectionId: "testimonials",
           heading: "CRAFTED FOR SPACES. TRUSTED BY CUSTOMERS.",
           description:
-            "From the first measurement to the finished installation, our work is built around the customer's requirements. See what customers have to say about their experience with Afsha Creative Solution",
-          cta: { label: "GET A QUOTE", href: "/contact" },
-          highlightCard: {
-            title: "GOOGLE REVIEWS",
-            ratingCountLabel: "80+ Reviews",
-            verifiedLabel: "Verified",
-            timeAgo: "9 months ago",
-            quote:
-              '"Hi Rohit Nyamgoud here. Railingo is not only a company it’s a family, In one word I can say is just close your eyes and go for the purchase you like. you will remember the product and person for a life time."',
-            author: "Rohit Nyamgoud",
-            authorRole: "Verified Client",
-            avatarLetter: "R",
-            buttonLabel: "View 80+ Reviews on Google",
-            buttonHref:
-              "https://maps.google.com/?cid=7804843562812692638&g_mp=CiVnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLkdldFBsYWNlEAMYASAF&hl=en&gl=IN&source=embed",
-          },
+            "From first site measurement to final installation, our work is trusted by homeowners, architects, and builders across Moradabad.",
+          cta: { label: "GET A QUOTE", href: "#quote-section" },
+          highlightCard: null,
           items: [
             {
               id: "review-mohit",
               author: "Mohit Agarwal",
-              role: "Verified Client",
+              role: "Homeowner, Civil Lines, Moradabad",
               quote:
                 "“We needed a custom main gate for our house. The team understood the design we wanted and delivered a strong, well-finished gate.”",
               avatarLetter: "M",
@@ -510,7 +551,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
             {
               id: "review-rahul",
               author: "Rahul Sharma",
-              role: "Verified Client",
+              role: "Homeowner, Ram Ganga Vihar, Moradabad",
               quote:
                 "“The stair railing was designed exactly according to our requirement. The finishing looks clean and the overall work was handled professionally.”",
               avatarLetter: "R",
@@ -524,7 +565,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
             {
               id: "review-amit",
               author: "Amit Verma",
-              role: "Verified Client",
+              role: "Residential Project, Rampur Road",
               quote:
                 "“We wanted a modern balcony railing for our new home. The design and fabrication turned out very well and matched the look of the house.”",
               avatarLetter: "A",
@@ -538,11 +579,51 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
           ],
           showStats: true,
           stats: [
-            { value: "80+", label: "Total Reviews" },
-            { value: "100+", label: "Custom Railing" },
-            { value: "400+", label: "Custom Gate" },
-            { value: "10+", label: "Year Working" },
-            { value: "99.4%", label: "On-Time Handover Rate" },
+            { value: "80+", label: "Google Reviews" },
+            { value: "100+", label: "Custom Railings" },
+            { value: "400+", label: "Custom Gates" },
+            { value: "10+", label: "Years Experience" },
+            { value: "99.4%", label: "On-Time Handover" },
+          ],
+        },
+      },
+      {
+        section_key: "home-service-areas",
+        section_type: "contact_info",
+        title: "Workshop & Service Areas",
+        sort_order: 8,
+        is_visible: true,
+        content: {
+          variant: "workshop_coverage",
+          sectionId: "service-areas",
+          eyebrow: "Service Areas · Direct Workshop Supply",
+          heading: "Fabricating in Moradabad for Surrounding Districts",
+          description:
+            "Visit our fabrication unit near KK Farm House, Harthala, Moradabad or book a site measurement visit for residential, farmhouse, and commercial metalwork.",
+          address:
+            "Near KK Farm House Bishanpur Road, Harthala, Lodhipur, Moradabad, UP 244001",
+          phoneDisplay: "+91 96347 76691",
+          phoneHref: "tel:+919634776691",
+          mapLink: {
+            label: "Open in Google Maps",
+            href: "https://maps.google.com/?cid=7804843562812692638&g_mp=CiVnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLkdldFBsYWNlEAMYASAF&hl=en&gl=IN&source=embed",
+          },
+          whatsappLink: {
+            label: "Book Site Visit on WhatsApp",
+            href: "https://wa.me/919634776691?text=Hello%20Afsha%20Creative%20Solution%2C%20I%20would%20like%20to%20schedule%20a%20site%20visit%20and%20quote.",
+          },
+          coverageTitle: "Areas We Actively Serve",
+          coverageDescription:
+            "Custom gates, railings, and steel fabrication with transport and on-site installation:",
+          coverageAreas: [
+            "Moradabad City & Civil Lines",
+            "Ram Ganga Vihar & Pakbara",
+            "Rampur & Milak",
+            "Sambhal & Chandausi",
+            "Amroha & Gajraula",
+            "Bijnor & Dhampur",
+            "Kashipur & Rudrapur",
+            "Bareilly & Nearby Regions",
           ],
         },
       },
@@ -550,7 +631,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
         section_key: "home-workshop-map",
         section_type: "contact_info",
         title: "Workshop Location Map",
-        sort_order: 7,
+        sort_order: 9,
         is_visible: true,
         content: {
           variant: "map_embed",
@@ -565,7 +646,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
         section_key: "home-faq",
         section_type: "faq",
         title: "Home FAQ Section",
-        sort_order: 8,
+        sort_order: 10,
         is_visible: true,
         content: {
           variant: "compact_home",
@@ -585,21 +666,41 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
               category: "ordering",
               question: "Can I request a quote before finalizing a design?",
               answer:
-                "Yes. Share your requirements through the contact page or WhatsApp and our team will guide the next steps.",
+                "Yes. Use the quick quote form below or message us on WhatsApp with rough dimensions and a reference photo for an initial estimate.",
             },
             {
               category: "products",
-              question: "Do you manufacture iron and steel railings?",
+              question: "Do you manufacture sliding, folding, and iron/steel railings?",
               answer:
-                "Yes. We make iron and steel railings for staircases, balconies, and other spaces on a made-to-measure basis.",
+                "Yes. We fabricate sliding gates, collapsible folding gates, steel security doors, and iron/stainless steel railings for staircases and balconies.",
             },
             {
               category: "customization",
               question: "Are products available in standard sizes?",
               answer:
-                "Most work is made to measure. We can discuss standard or project-specific dimensions during consultation.",
+                "Most work is made to measure after site inspection so your gate or railing fits securely without gaps.",
             },
           ],
+        },
+      },
+      {
+        section_key: "home-final-quote",
+        section_type: "contact_info",
+        title: "Final Free Quote Enquiry Section",
+        sort_order: 11,
+        is_visible: true,
+        content: {
+          variant: "quote_form",
+          sectionId: "quote-section",
+          eyebrow: "Direct Workshop Estimate",
+          heading: "Get a Free Metalwork Quote",
+          description:
+            "Tell us what you need—gate, door, railing, or custom fabrication—and our Moradabad workshop team will reply promptly.",
+          formEyebrow: "Request a Free Estimate",
+          formTitle: "Get Your Custom Gate or Railing Quote",
+          formSubtitle:
+            "Share your name, mobile number, product requirement, city, and an optional site photo or sketch.",
+          defaultCategory: "gates",
         },
       },
     ],
@@ -1570,7 +1671,110 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
           heading: "Complete Category Collection",
           description:
             "From robust boundary gates to intricate balustrades, every category is produced to order in our Moradabad facility.",
-          categories: [],
+          categories: [
+            {
+              id: "grid-main-gates",
+              name: "Main Gates",
+              slug: "gates",
+              href: "/categories/gates",
+              image: img("asset:steel_gate.ssGate13", "Main Gates"),
+              material: "304 Stainless Steel & Wrought Iron",
+              description:
+                "Bespoke driveway and pedestrian entrance gates engineered for security, structural rigidity, and curb appeal.",
+              highlights: [
+                "Heavy-duty ball bearing hinges",
+                "Automation & smart lock compatible",
+                "Electrostatic rust-inhibitor primer",
+              ],
+              isFeatured: true,
+              countCategorySlug: "gates",
+            },
+            {
+              id: "grid-balcony-railings",
+              name: "Balcony Railings",
+              slug: "balcony-railings",
+              href: "/categories/balcony-railings",
+              image: img("asset:iron_balcony_railing.ironbrail3", "Balcony Railings"),
+              material: "Wrought Iron & SS-304",
+              description:
+                "Safety-compliant outdoor balustrades built to withstand severe monsoons while framing terrace and balcony elevations.",
+              highlights: [
+                "Child-safe 4-inch bar spacing",
+                "Weather-tested coatings",
+                "Terrace perimeter defense",
+              ],
+              isFeatured: true,
+              countCategorySlug: "balcony-railings",
+            },
+            {
+              id: "grid-staircase-railings",
+              name: "Staircase Railings",
+              slug: "stair-railings",
+              href: "/categories/stair-railings",
+              image: img("asset:steel_stair_railing.ssStairRailling13", "Staircase Railings"),
+              material: "Steel, Iron & Wood-Top Profiles",
+              description:
+                "Custom-contoured interior staircase balustrades following straight runs, landings, and fluid helical curves.",
+              highlights: [
+                "Continuous smooth handrail",
+                "Custom rake angle fitting",
+                "Heavy-gauge newel posts",
+              ],
+              isFeatured: true,
+              countCategorySlug: "stair-railings",
+            },
+            {
+              id: "grid-spiral-railings",
+              name: "Spiral & Curved Railings",
+              slug: "spiral-railings",
+              href: "/categories/spiral-railings",
+              image: img("asset:steel_spiral_railing.ssSpiralRailling3", "Spiral & Curved Railings"),
+              material: "Roll-Bent Stainless Steel & Forged Iron",
+              description:
+                "Precision-curved architectural balustrades for tight spirals, sweeping duplex staircases, and helical layouts.",
+              highlights: [
+                "Continuous mandrel tube bending",
+                "Custom radius engineering",
+                "Seamless field-welded joins",
+              ],
+              isFeatured: true,
+              countCategorySlug: "spiral-railings",
+            },
+            {
+              id: "grid-decorative-metal-grills",
+              name: "Decorative Metal Grills",
+              slug: "decorative-grills",
+              href: "/custom-metalwork",
+              image: img("asset:iron_stair_railing.ironStairRailling4", "Decorative Metal Grills"),
+              material: "Laser-Cut Steel & Forged Iron",
+              description:
+                "Artistic window security screens, interior room partition dividers, and privacy jaali panels for modern spaces.",
+              highlights: [
+                "Parametric & botanical patterns",
+                "Concealed mounting tabs",
+                "Oven-cured powder coat",
+              ],
+              isFeatured: true,
+              countCategorySlug: "decorative-grills",
+            },
+            {
+              id: "grid-custom-metalwork",
+              name: "Bespoke Custom Metalwork",
+              slug: "custom-metalwork",
+              href: "/custom-metalwork",
+              image: img("asset:steel_gate.ssGate4", "Bespoke Custom Metalwork"),
+              material: "Curved Spiral Stairs & Special Fabrication",
+              description:
+                "One-of-a-kind metal structures, spiral staircase fabrication, bespoke brackets, and architectural statement pieces.",
+              highlights: [
+                "Made to CAD specifications",
+                "On-site dimension survey",
+                "Master artisan execution",
+              ],
+              isFeatured: true,
+              countCategorySlug: "custom-metalwork",
+            },
+          ],
         },
       },
       {

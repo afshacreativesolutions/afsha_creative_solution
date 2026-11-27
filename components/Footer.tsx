@@ -6,7 +6,7 @@ import logo from "../assets/Logo/logo-mark.png";
 import { icons } from "@/utils/images";
 import AnimatedButton from "./AnimatedButton";
 import Link from "next/link";
-import { useConsent } from "./consent/ConsentProvider";
+import { useOptionalConsent } from "./consent/ConsentProvider";
 import type { CmsFooterSetting, CmsSiteIdentitySetting } from "@/lib/cms/types";
 
 const PLATFORM_ICON_SRC = {
@@ -23,13 +23,8 @@ const Footer = ({
   footer?: CmsFooterSetting;
   identity?: CmsSiteIdentitySetting;
 }) => {
-  let openSettings: (() => void) | undefined;
-  try {
-    const consent = useConsent();
-    openSettings = consent.openSettings;
-  } catch {
-    // Fallback if rendered outside ConsentProvider
-  }
+  const consentCtx = useOptionalConsent();
+  const openSettings = consentCtx?.openSettings;
 
   const brandTitle = identity?.brandTitle || "AFSHA";
   const brandSubtitle = identity?.brandSubtitle || "CREATIVE SOLUTION";
@@ -99,7 +94,7 @@ const Footer = ({
       ];
 
   return (
-    <div className="bg-cardGray/20">
+    <footer className="bg-cardGray/20 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-4">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 sm:gap-5 sm:px-6">
         <div className="grid grid-cols-1 gap-6 border-b border-white/10 py-6 sm:grid-cols-2 sm:gap-10 sm:py-8 lg:grid-cols-5">
           <div className="flex flex-col gap-5 sm:col-span-2 lg:col-span-2">
@@ -265,7 +260,7 @@ const Footer = ({
           </div>
         </div>
       </div>
-    </div>
+    </footer>
   );
 };
 

@@ -174,23 +174,27 @@ export function buildAdminNotificationHtml({
   customerName,
   phone,
   email,
+  city,
   referenceNumber,
   categoryName,
   message,
   dimensions,
   material,
   source,
+  hasAttachment,
   submittedAt,
 }: {
   customerName: string;
   phone: string;
   email?: string;
+  city?: string;
   referenceNumber: string;
   categoryName: string;
   message: string;
   dimensions?: string;
   material?: string;
   source: string;
+  hasAttachment?: boolean;
   submittedAt: string;
 }) {
   return `
@@ -208,10 +212,12 @@ export function buildAdminNotificationHtml({
 
     <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #CCC; margin-bottom: 20px;">
       <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); width: 140px; color: #888;">Phone:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #FFF;"><strong>${escapeHtml(phone)}</strong></td></tr>
+      <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">City / Location:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">${escapeHtml(city || "Not specified")}</td></tr>
       <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">Email:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">${escapeHtml(email || "Not provided")}</td></tr>
       <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">Dimensions:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">${escapeHtml(dimensions || "Not specified")}</td></tr>
       <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">Material:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">${escapeHtml(material || "Not specified")}</td></tr>
       <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">Source:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">${escapeHtml(source)}</td></tr>
+      ${hasAttachment ? `<tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">Reference Photo:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #D6A36F;">Attached in Admin Leads Workspace</td></tr>` : ""}
       <tr><td style="padding: 8px 0; color: #888;">Time:</td><td style="padding: 8px 0;">${escapeHtml(submittedAt)}</td></tr>
     </table>
 

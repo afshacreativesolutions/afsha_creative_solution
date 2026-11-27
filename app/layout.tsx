@@ -14,6 +14,11 @@ import { ConsentProvider } from "@/components/consent/ConsentProvider";
 import CookieBanner from "@/components/consent/CookieBanner";
 import CookieSettingsModal from "@/components/consent/CookieSettingsModal";
 import NavigationTracker from "@/components/tracking/NavigationTracker";
+import { EnquiryProvider } from "@/components/lead/EnquiryContext";
+import EnquiryModal from "@/components/lead/EnquiryModal";
+import MobileStickyBar from "@/components/lead/MobileStickyBar";
+import PublicChromeGate from "@/components/layout/PublicChromeGate";
+import { getPublicCategories } from "@/lib/catalog";
 import {
   DEFAULT_KEYWORDS,
   PRODUCTION_SITE_URL,
@@ -100,7 +105,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const settings = await getPublishedCmsSiteSettings().catch(() => null);
+  const [settings, categories] = await Promise.all([
+    getPublishedCmsSiteSettings().catch(() => null),
+    getPublicCategories().catch(() => []),
+  ]);
   const id = settings?.site_identity;
   const seo = settings?.seo_defaults;
 
@@ -167,17 +175,30 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col font-sans">
         <JsonLd data={[organizationSchema, localBusinessSchema, websiteSchema]} />
 
-        <Analytics />
         <ConsentProvider>
-          <NavigationTracker />
+          <PublicChromeGate>
+            <Analytics />
+            <NavigationTracker />
+          </PublicChromeGate>
           <MenuProvider>
-            <Navbar navigation={settings?.navigation} identity={settings?.site_identity} />
-            <Menu megaMenu={settings?.mega_menu} />
-            <Whatsapp identity={settings?.site_identity} />
-            {children}
-            <Footer footer={settings?.footer} identity={settings?.site_identity} />
-            <CookieBanner />
-            <CookieSettingsModal />
+            <EnquiryProvider>
+              <PublicChromeGate>
+                <Navbar navigation={settings?.navigation} identity={settings?.site_identity} />
+                <Menu megaMenu={settings?.mega_menu} />
+                <Whatsapp identity={settings?.site_identity} />
+              </PublicChromeGate>
+              {children}
+              <PublicChromeGate>
+                <Footer footer={settings?.footer} identity={settings?.site_identity} />
+                <MobileStickyBar identity={settings?.site_identity} />
+                <EnquiryModal
+                  categories={categories.map(({ slug, name }) => ({ slug, name }))}
+                  identity={settings?.site_identity}
+                />
+                <CookieBanner />
+                <CookieSettingsModal />
+              </PublicChromeGate>
+            </EnquiryProvider>
           </MenuProvider>
         </ConsentProvider>
       </body>

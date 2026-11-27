@@ -7,8 +7,64 @@ import ProductsCatalog from "@/app/products/products-catalog";
 import CmsImage from "../CmsImage";
 import { collectionsData as fallbackCollections, croselData as fallbackProjects } from "@/utils/data";
 import type { CategoryRecord, ProductRecord } from "@/lib/catalog-types";
-import type { ProductCategoryGridContent } from "@/lib/cms/types";
+import type { CmsImageRef, ProductCategoryGridContent } from "@/lib/cms/types";
 import type { collectionDataType } from "@/utils/type";
+
+const CATEGORY_DEFAULT_IMAGE_ASSETS: Record<string, string> = {
+  gates: "asset:steel_gate.ssGate13",
+  "main-gates": "asset:steel_gate.ssGate13",
+  "stair-railings": "asset:steel_stair_railing.ssStairRailling13",
+  "staircase-railings": "asset:steel_stair_railing.ssStairRailling13",
+  railings: "asset:steel_stair_railing.ssStairRailling8",
+  "metal-railings": "asset:steel_stair_railing.ssStairRailling8",
+  "balcony-railings": "asset:iron_balcony_railing.ironbrail3",
+  "spiral-railings": "asset:steel_spiral_railing.ssSpiralRailling3",
+  "decorative-grills": "asset:iron_stair_railing.ironStairRailling4",
+  "custom-metalwork": "asset:steel_gate.ssGate4",
+};
+
+function resolveCategoryCardImage(
+  cat: {
+    image?: CmsImageRef | string | null;
+    slug?: string;
+    id?: string;
+    countCategorySlug?: string;
+    name?: string;
+  },
+  products?: ProductRecord[]
+): CmsImageRef | string {
+  if (cat.image) return cat.image;
+
+  const slugKey = (cat.slug || cat.countCategorySlug || cat.id || "").toLowerCase();
+
+  // 1. Try to find a matching product image from catalog products
+  if (products && products.length > 0) {
+    const matchingProduct = products.find(
+      (p) => p.category?.slug === slugKey || p.category?.id === cat.id
+    );
+    if (matchingProduct) {
+      const prodImg =
+        matchingProduct.images?.find((img) => img.is_primary) ?? matchingProduct.images?.[0];
+      if (prodImg?.url) {
+        return { url: prodImg.url, alt: matchingProduct.name };
+      }
+    }
+  }
+
+  // 2. Exact match in default category assets
+  if (CATEGORY_DEFAULT_IMAGE_ASSETS[slugKey]) {
+    return CATEGORY_DEFAULT_IMAGE_ASSETS[slugKey];
+  }
+
+  // 3. Fuzzy match
+  for (const [key, asset] of Object.entries(CATEGORY_DEFAULT_IMAGE_ASSETS)) {
+    if (slugKey.includes(key) || key.includes(slugKey)) {
+      return asset;
+    }
+  }
+
+  return "asset:steel_gate.ssGate13";
+}
 
 export type CatalogRuntimeContext = {
   products?: ProductRecord[];
@@ -143,20 +199,26 @@ export default function ProductCategoryGridSection({
     }
   }
 
-  const configuredCards = content.categories && content.categories.length > 0
-    ? content.categories
-    : categories.map((cat) => ({
-        id: cat.id,
-        name: cat.name,
-        slug: cat.slug,
-        href: `/categories/${cat.slug}`,
-        image: null,
-        material: "Made to Measure Metalwork",
-        description: cat.description || `Explore custom ${cat.name.toLowerCase()} fabricated to order.`,
-        highlights: ["Made-to-measure sizing", "Custom finishes"],
-        isFeatured: true,
-        countCategorySlug: cat.slug,
-      }));
+  const rawCards =
+    content.categories && content.categories.length > 0
+      ? content.categories
+      : categories.map((cat) => ({
+          id: cat.id,
+          name: cat.name,
+          slug: cat.slug,
+          href: `/categories/${cat.slug}`,
+          image: null,
+          material: "Made to Measure Metalwork",
+          description: cat.description || `Explore custom ${cat.name.toLowerCase()} fabricated to order.`,
+          highlights: ["Made-to-measure sizing", "Custom finishes"],
+          isFeatured: true,
+          countCategorySlug: cat.slug,
+        }));
+
+  const configuredCards = rawCards.map((cat) => ({
+    ...cat,
+    image: resolveCategoryCardImage(cat, products),
+  }));
 
   if (content.variant === "featured_categories") {
     const featuredCards = configuredCards.filter((c) => c.isFeatured !== false).slice(0, 4);

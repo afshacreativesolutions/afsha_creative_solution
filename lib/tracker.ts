@@ -4,6 +4,12 @@ export type AllowedEventName =
   | "page_view"
   | "session_start"
   | "quote_form_submit"
+  | "quote_cta_click"
+  | "enquiry_form_start"
+  | "enquiry_form_submit"
+  | "enquiry_form_success"
+  | "enquiry_form_error"
+  | "product_enquiry_click"
   | "contact_form_submit"
   | "whatsapp_click"
   | "phone_click"
@@ -16,6 +22,12 @@ export const ALLOWED_EVENT_NAMES = new Set<AllowedEventName>([
   "page_view",
   "session_start",
   "quote_form_submit",
+  "quote_cta_click",
+  "enquiry_form_start",
+  "enquiry_form_submit",
+  "enquiry_form_success",
+  "enquiry_form_error",
+  "product_enquiry_click",
   "contact_form_submit",
   "whatsapp_click",
   "phone_click",
@@ -24,6 +36,33 @@ export const ALLOWED_EVENT_NAMES = new Set<AllowedEventName>([
   "gallery_filter",
   "custom_metalwork_inquiry",
 ]);
+
+const SENSITIVE_PROPERTY_KEYS = new Set([
+  "name",
+  "customer_name",
+  "phone",
+  "mobile",
+  "email",
+  "message",
+  "project_details",
+  "city",
+  "location",
+  "address",
+  "attachment",
+]);
+
+export function sanitizeAnalyticsProperties(
+  properties: Record<string, unknown> = {}
+): Record<string, unknown> {
+  const safe: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(properties)) {
+    if (SENSITIVE_PROPERTY_KEYS.has(key.toLowerCase())) continue;
+    if (typeof val === "string" || typeof val === "number" || typeof val === "boolean") {
+      safe[key] = typeof val === "string" ? val.slice(0, 120) : val;
+    }
+  }
+  return safe;
+}
 
 export type EventPayload = {
   eventName: AllowedEventName;
@@ -74,6 +113,7 @@ export async function trackEvent(
   const visitorId = getOrCreateVisitorId();
   const sessionId = getOrCreateSessionId();
   const attribution = getAttributionFromUrl();
+  const safeProperties = sanitizeAnalyticsProperties(properties);
 
   const payload = {
     visitorId,
@@ -82,7 +122,7 @@ export async function trackEvent(
     pageUrl: window.location.href,
     pageTitle: document.title,
     referrer: document.referrer || null,
-    properties,
+    properties: safeProperties,
     ...attribution,
   };
 
@@ -95,14 +135,14 @@ export async function trackEvent(
 
   if (typeof w.gtag === "function" && (!consent || consent.categories.analytics)) {
     w.gtag("event", eventName, {
-      ...properties,
+      ...safeProperties,
       page_location: window.location.href,
       page_title: document.title,
     });
   } else if (w.dataLayer && Array.isArray(w.dataLayer) && (!consent || consent.categories.analytics)) {
     w.dataLayer.push({
       event: eventName,
-      ...properties,
+      ...safeProperties,
       page_location: window.location.href,
       page_title: document.title,
     });
@@ -110,16 +150,20 @@ export async function trackEvent(
 
   // 2. Meta Pixel event bridge (if advertising consent granted)
   if (typeof w.fbq === "function" && consent?.categories.advertising) {
-    if (eventName === "quote_form_submit" || eventName === "contact_form_submit") {
-      w.fbq("track", "Lead", properties);
+    if (
+      eventName === "quote_form_submit" ||
+      eventName === "enquiry_form_success" ||
+      eventName === "contact_form_submit"
+    ) {
+      w.fbq("track", "Lead", safeProperties);
     } else if (eventName === "product_view") {
-      w.fbq("track", "ViewContent", properties);
+      w.fbq("track", "ViewContent", safeProperties);
     } else if (eventName === "page_view") {
       w.fbq("track", "PageView");
     } else if (eventName === "whatsapp_click" || eventName === "phone_click") {
-      w.fbq("track", "Contact", properties);
+      w.fbq("track", "Contact", safeProperties);
     } else {
-      w.fbq("trackCustom", eventName, properties);
+      w.fbq("trackCustom", eventName, safeProperties);
     }
   }
 

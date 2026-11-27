@@ -1,6 +1,6 @@
 import { icons } from "@/utils/images";
-import Link from "next/link";
 import React from "react";
+import TrackedActionLink from "@/components/lead/TrackedActionLink";
 import type { CmsSiteIdentitySetting } from "@/lib/cms/types";
 
 const Whatsapp = ({ identity }: { identity?: CmsSiteIdentitySetting }) => {
@@ -15,12 +15,14 @@ const Whatsapp = ({ identity }: { identity?: CmsSiteIdentitySetting }) => {
   const href = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 
   return (
-    <Link
+    <TrackedActionLink
       href={href}
+      eventName="whatsapp_click"
+      trackingProps={{ placement: "desktop_floating_whatsapp" }}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Contact us on WhatsApp"
-      className="fixed bottom-5 right-5 z-50"
+      ariaLabel="Contact us on WhatsApp"
+      className="fixed bottom-5 right-5 z-50 hidden md:block"
     >
       <div className="group w-fit rounded-full bg-green-500 p-2 transition duration-300 ease-in-out hover:bg-green-500/60">
         <span
@@ -36,7 +38,7 @@ const Whatsapp = ({ identity }: { identity?: CmsSiteIdentitySetting }) => {
           }}
         />
       </div>
-    </Link>
+    </TrackedActionLink>
   );
 };
 

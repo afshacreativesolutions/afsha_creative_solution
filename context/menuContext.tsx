@@ -42,3 +42,7 @@ export function useMenu() {
 
   return context;
 }
+
+export function useOptionalMenu() {
+  return useContext(MenuContext) ?? null;
+}

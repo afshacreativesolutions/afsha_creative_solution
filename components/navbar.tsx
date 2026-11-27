@@ -3,9 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Menu as MenuIcon, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import logo from "../assets/Logo/logo-mark.png";
 import { useMenu } from "@/context/menuContext";
+import { useOptionalEnquiry } from "@/components/lead/EnquiryContext";
 import type { CmsNavigationSetting, CmsSiteIdentitySetting } from "@/lib/cms/types";
 
 const DEFAULT_DESKTOP_LINKS = [
@@ -40,6 +41,12 @@ export default function Navbar({
 }) {
   const { menu, toggleMenu, closeMenu } = useMenu();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const enquiry = useOptionalEnquiry();
+  const setSuppressedByOverlay = enquiry?.setSuppressedByOverlay;
+
+  useEffect(() => {
+    setSuppressedByOverlay?.(mobileNavOpen);
+  }, [mobileNavOpen, setSuppressedByOverlay]);
 
   const brandTitle = identity?.brandTitle || "AFSHA";
   const brandSubtitle = identity?.brandSubtitle || "CREATIVE SOLUTION";
@@ -153,6 +160,20 @@ export default function Navbar({
                 {link.label}
               </Link>
             ))}
+            {enquiry && (
+              <div className="pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileNavOpen(false);
+                    enquiry.openEnquiryModal({ placement: "navbar_mobile" });
+                  }}
+                  className="flex min-h-12 w-full items-center justify-center rounded-full bg-textGold text-xs font-semibold uppercase tracking-[0.16em] text-black"
+                >
+                  Get a Free Quote
+                </button>
+              </div>
+            )}
           </nav>
         </div>
       )}

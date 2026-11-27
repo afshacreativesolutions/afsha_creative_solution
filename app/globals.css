@@ -156,9 +156,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: clip;
   }
   html {
     @apply font-sans;
+    overflow-x: clip;
   }
 }
 
@@ -169,6 +171,63 @@
 
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Admin sidebar scroll: removes vertical scrollbar, allows horizontal scrolling with custom scrollbar */
+  .admin-sidebar-scroll {
+    overflow-x: auto;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(205, 162, 116, 0.4) transparent;
+  }
+
+  .admin-sidebar-scroll::-webkit-scrollbar:vertical {
+    display: none;
+    width: 0px;
+  }
+
+  .admin-sidebar-scroll::-webkit-scrollbar:horizontal {
+    height: 4px;
+  }
+
+  .admin-sidebar-scroll::-webkit-scrollbar-track:horizontal {
+    background: transparent;
+  }
+
+  .admin-sidebar-scroll::-webkit-scrollbar-thumb:horizontal {
+    background: rgba(205, 162, 116, 0.35);
+    border-radius: 9999px;
+  }
+
+  .admin-sidebar-scroll::-webkit-scrollbar-thumb:horizontal:hover {
+    background: rgba(205, 162, 116, 0.7);
+  }
+
+  /* Admin horizontal scroll container: touch-friendly with visible gold scrollbar */
+  .admin-horizontal-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(205, 162, 116, 0.4) rgba(255, 255, 255, 0.05);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-horizontal-scroll::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  .admin-horizontal-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 9999px;
+  }
+
+  .admin-horizontal-scroll::-webkit-scrollbar-thumb {
+    background: rgba(205, 162, 116, 0.35);
+    border-radius: 9999px;
+  }
+
+  .admin-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(205, 162, 116, 0.7);
   }
 }
 

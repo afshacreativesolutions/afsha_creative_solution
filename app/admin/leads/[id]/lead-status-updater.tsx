@@ -2,8 +2,15 @@
 
 import { useState } from "react";
 import { Check, LoaderCircle, Save } from "lucide-react";
+import {
+  ADMIN_BTN_PRIMARY,
+  ADMIN_INPUT_CLASS,
+  ADMIN_LABEL_CLASS,
+  ADMIN_SELECT_CLASS,
+  ADMIN_TEXTAREA_CLASS,
+} from "@/components/admin/admin-styles";
+import type { LeadStatus } from "@/lib/crm-types";
 import { updateLeadStatus } from "../actions";
-import { LeadStatus } from "@/lib/crm-types";
 
 type Props = {
   leadId: string;
@@ -53,20 +60,20 @@ export default function LeadStatusUpdater({
   }
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#0d0d0d] p-6 space-y-5">
+    <section className="space-y-5 rounded-xl border border-white/10 bg-[#0d0d0d] p-4 sm:p-6">
       <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-textGold">
         Pipeline Actions
       </h2>
 
-      {/* Status Picker */}
       <div>
-        <label className="block text-[10px] uppercase tracking-[0.14em] text-white/50 mb-1.5">
+        <label htmlFor="lead-status-select" className={ADMIN_LABEL_CLASS}>
           Lead Status
         </label>
         <select
+          id="lead-status-select"
           value={status}
           onChange={(e) => setStatus(e.target.value as LeadStatus)}
-          className="w-full rounded border border-white/15 bg-[#141414] px-3 py-2 text-xs text-white outline-none focus:border-textGold"
+          className={ADMIN_SELECT_CLASS}
         >
           {statusOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -76,59 +83,64 @@ export default function LeadStatusUpdater({
         </select>
       </div>
 
-      {/* Follow-up Date */}
       <div>
-        <label className="block text-[10px] uppercase tracking-[0.14em] text-white/50 mb-1.5">
+        <label htmlFor="lead-follow-up-date" className={ADMIN_LABEL_CLASS}>
           Follow-up Date
         </label>
         <input
+          id="lead-follow-up-date"
           type="date"
           value={followUpDate}
           onChange={(e) => setFollowUpDate(e.target.value)}
-          className="w-full rounded border border-white/15 bg-[#141414] px-3 py-2 text-xs text-white outline-none focus:border-textGold"
+          className={ADMIN_INPUT_CLASS}
         />
       </div>
 
-      {/* Internal Workshop Notes */}
       <div>
-        <label className="block text-[10px] uppercase tracking-[0.14em] text-white/50 mb-1.5">
+        <label htmlFor="lead-internal-notes" className={ADMIN_LABEL_CLASS}>
           Internal Workshop Notes
         </label>
         <textarea
+          id="lead-internal-notes"
           rows={4}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Add pricing details, measurement notes, or customer requirements..."
-          className="w-full resize-y rounded border border-white/15 bg-[#141414] p-3 text-xs text-white outline-none placeholder:text-white/30 focus:border-textGold"
+          className={`${ADMIN_TEXTAREA_CLASS} resize-y`}
         />
       </div>
 
-      {error && (
-        <p className="rounded bg-red-500/10 p-2 text-xs text-red-300">{error}</p>
-      )}
-
-      {saved && (
-        <p className="flex items-center gap-1.5 rounded bg-emerald-500/10 p-2 text-xs text-emerald-300">
-          <Check size={14} /> Changes saved successfully!
-        </p>
-      )}
+      <div aria-live="polite" className="space-y-2">
+        {error && (
+          <p role="alert" className="rounded-lg bg-red-500/15 p-3 text-xs text-red-200">
+            {error}
+          </p>
+        )}
+        {saved && (
+          <p className="flex items-center gap-1.5 rounded-lg bg-emerald-500/15 p-3 text-xs text-emerald-300">
+            <Check size={14} /> Changes saved successfully!
+          </p>
+        )}
+      </div>
 
       <button
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border border-textGold bg-textGold/20 px-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-textGold transition hover:bg-textGold hover:text-black disabled:cursor-wait"
+        className={`${ADMIN_BTN_PRIMARY} w-full`}
       >
         {saving ? (
           <>
-            <LoaderCircle size={14} className="animate-spin" /> Saving...
+            <LoaderCircle size={15} className="animate-spin" />
+            <span>Saving...</span>
           </>
         ) : (
           <>
-            <Save size={14} /> Update Lead
+            <Save size={15} />
+            <span>Update Lead</span>
           </>
         )}
       </button>
-    </div>
+    </section>
   );
 }

@@ -25,7 +25,7 @@ import type {
 } from "@/lib/cms/types";
 
 const INPUT_CLASS =
-  "w-full rounded-lg border border-white/15 bg-[#111] px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-textGold focus:outline-none";
+  "min-h-11 w-full rounded-lg border border-white/15 bg-[#111] px-3.5 py-2.5 text-base text-white placeholder:text-white/30 focus:border-textGold focus:outline-none sm:text-sm";
 const LABEL_CLASS = "mb-1.5 block text-[11px] font-medium uppercase tracking-[0.12em] text-white/60";
 
 function Field({
@@ -68,23 +68,23 @@ function ImageField({
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#0d0d0d] p-3.5">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
         <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-white/65">
           {label}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-textGold/50 bg-textGold/10 px-2.5 py-1 text-[11px] text-textGold hover:bg-textGold hover:text-black"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-textGold/50 bg-textGold/10 px-3 text-xs text-textGold hover:bg-textGold hover:text-black"
           >
-            <ImageIcon size={12} /> {value ? "Change Image" : "Select Image"}
+            <ImageIcon size={13} /> {value ? "Change Image" : "Select Image"}
           </button>
           {value && (
             <button
               type="button"
               onClick={() => onChange(null)}
-              className="rounded-md border border-red-500/30 px-2 py-1 text-[11px] text-red-300 hover:bg-red-950/40"
+              className="inline-flex min-h-10 items-center rounded-lg border border-red-500/30 px-3 text-xs text-red-300 hover:bg-red-950/40"
             >
               Remove
             </button>
@@ -93,8 +93,8 @@ function ImageField({
       </div>
 
       {value ? (
-        <div className="flex items-center gap-3">
-          <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative h-24 w-full shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black sm:h-16 sm:w-24">
             {previewSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={previewSrc} alt={value.alt || label} className="h-full w-full object-cover" />
@@ -110,7 +110,7 @@ function ImageField({
               value={value.alt || ""}
               onChange={(e) => onChange({ ...value, alt: e.target.value })}
               placeholder="Image alt text (for SEO & accessibility)"
-              className="w-full rounded border border-white/15 bg-[#141414] px-2.5 py-1 text-xs text-white focus:border-textGold focus:outline-none"
+              className="min-h-10 w-full rounded-lg border border-white/15 bg-[#141414] px-3 text-sm text-white focus:border-textGold focus:outline-none sm:text-xs"
             />
             <p className="truncate text-[10px] text-white/40">
               {value.storagePath || value.url}
@@ -143,7 +143,7 @@ function ButtonEditor({
 }) {
   return (
     <div className="rounded-xl border border-white/10 bg-[#0d0d0d] p-3.5">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-white/65">
           {label}
         </span>
@@ -151,7 +151,7 @@ function ButtonEditor({
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="text-[11px] text-red-300/80 hover:text-red-200"
+            className="min-h-10 rounded px-2 text-xs text-red-300/85 hover:text-red-200"
           >
             Clear Button
           </button>
@@ -159,7 +159,7 @@ function ButtonEditor({
           <button
             type="button"
             onClick={() => onChange({ label: "Learn More", href: "/contact" })}
-            className="text-[11px] text-textGold hover:underline"
+            className="min-h-10 rounded px-2 text-xs text-textGold hover:underline"
           >
             + Add Button
           </button>
@@ -202,16 +202,16 @@ function StringListEditor({
 }) {
   return (
     <div className="space-y-2 rounded-xl border border-white/10 bg-[#0d0d0d] p-3.5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-white/65">
           {label}
         </span>
         <button
           type="button"
           onClick={() => onChange([...items, ""])}
-          className="inline-flex items-center gap-1 rounded border border-textGold/40 bg-textGold/10 px-2 py-1 text-[11px] text-textGold hover:bg-textGold hover:text-black"
+          className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-textGold/40 bg-textGold/10 px-3 text-xs text-textGold hover:bg-textGold hover:text-black"
         >
-          <Plus size={12} /> Add
+          <Plus size={13} /> Add
         </button>
       </div>
       {items.length === 0 && <p className="text-xs text-white/40">No entries yet.</p>}
@@ -246,10 +246,10 @@ function StringListEditor({
             <button
               type="button"
               onClick={() => onChange(items.filter((_, i) => i !== idx))}
-              className="mt-1 rounded border border-red-500/30 p-2 text-red-300 hover:bg-red-950/40"
+              className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border border-red-500/30 text-red-300 hover:bg-red-950/40"
               aria-label="Remove item"
             >
-              <Trash2 size={13} />
+              <Trash2 size={14} />
             </button>
           </div>
         ))}
@@ -281,34 +281,37 @@ function ArrayItemControls({
   onDelete: () => void;
 }) {
   return (
-    <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-2">
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2.5">
       <span className="text-xs font-medium text-textGold">{label}</span>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         <button
           type="button"
           disabled={index === 0}
           onClick={() => onMove(-1)}
-          className="rounded border border-white/10 p-1 text-white/60 hover:text-white disabled:opacity-30"
+          aria-label={`Move ${label} up`}
+          className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/10 text-white/65 hover:text-white disabled:opacity-30"
           title="Move up"
         >
-          <ArrowUp size={12} />
+          <ArrowUp size={13} />
         </button>
         <button
           type="button"
           disabled={index === total - 1}
           onClick={() => onMove(1)}
-          className="rounded border border-white/10 p-1 text-white/60 hover:text-white disabled:opacity-30"
+          aria-label={`Move ${label} down`}
+          className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/10 text-white/65 hover:text-white disabled:opacity-30"
           title="Move down"
         >
-          <ArrowDown size={12} />
+          <ArrowDown size={13} />
         </button>
         <button
           type="button"
           onClick={onDelete}
-          className="rounded border border-red-500/30 p-1 text-red-300 hover:bg-red-950/40"
+          aria-label={`Remove ${label}`}
+          className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-red-500/30 text-red-300 hover:bg-red-950/40"
           title="Remove"
         >
-          <Trash2 size={12} />
+          <Trash2 size={13} />
         </button>
       </div>
     </div>

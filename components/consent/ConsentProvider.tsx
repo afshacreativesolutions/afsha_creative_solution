@@ -100,3 +100,7 @@ export function useConsent() {
   }
   return ctx;
 }
+
+export function useOptionalConsent() {
+  return useContext(ConsentContext) ?? null;
+}

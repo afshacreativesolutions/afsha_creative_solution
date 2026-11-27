@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image, { type StaticImageData } from "next/image";
-import { ChevronLeft, ChevronRight, MessageCircle, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, MessageCircle, X, ZoomIn } from "lucide-react";
+import { useOptionalEnquiry } from "@/components/lead/EnquiryContext";
+import { trackEvent } from "@/lib/tracker";
 
 export type GalleryItem = {
   id: string;
@@ -33,6 +35,8 @@ export default function GalleryLightbox({
 }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const enquiry = useOptionalEnquiry();
+  const setSuppressedByOverlay = enquiry?.setSuppressedByOverlay;
 
   const filterList = categories.length ? categories : DEFAULT_CATEGORIES;
 
@@ -62,9 +66,11 @@ export default function GalleryLightbox({
   useEffect(() => {
     if (lightboxIndex === null) {
       document.body.style.overflow = "";
+      setSuppressedByOverlay?.(false);
       return;
     }
     document.body.style.overflow = "hidden";
+    setSuppressedByOverlay?.(true);
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeLightbox();
       if (e.key === "ArrowRight") showNext();
@@ -74,9 +80,10 @@ export default function GalleryLightbox({
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = "";
+      setSuppressedByOverlay?.(false);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [lightboxIndex, closeLightbox, showNext, showPrev]);
+  }, [lightboxIndex, closeLightbox, showNext, showPrev, setSuppressedByOverlay]);
 
   const currentItem = lightboxIndex !== null ? filteredItems[lightboxIndex] : null;
 
@@ -129,7 +136,7 @@ export default function GalleryLightbox({
                 <ZoomIn size={15} />
               </span>
 
-              <div className="absolute inset-x-0 bottom-0 p-3.5 transition-transform duration-300 sm:p-5">
+              <div className="absolute inset-x-0 bottom-0 p-3 transition-transform duration-300 sm:p-5">
                 <p className="text-[8px] uppercase tracking-[0.2em] text-textGold sm:text-[9px]">
                   {item.category}
                 </p>
@@ -139,6 +146,30 @@ export default function GalleryLightbox({
                 <p className="mt-0.5 line-clamp-1 text-[10px] text-white/50 sm:text-xs">
                   {item.material}
                 </p>
+                {enquiry && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void trackEvent("quote_cta_click", {
+                        placement: "gallery_card",
+                        categorySlug: item.categorySlug || "custom-metalwork",
+                      });
+                      enquiry.openEnquiryModal({
+                        title: `Quote: ${item.title}`,
+                        subtitle: `${item.category} · ${item.material}`,
+                        productName: item.title,
+                        categorySlug: item.categorySlug || "custom-metalwork",
+                        placement: "gallery_page",
+                      });
+                    }}
+                    aria-label={`Request quote for ${item.title}`}
+                    className="mt-2.5 inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border border-textGold/60 bg-black/85 px-3 text-[10px] font-medium uppercase tracking-[0.14em] text-textGold transition hover:bg-textGold hover:text-black sm:w-auto sm:px-4"
+                  >
+                    <FileText size={13} />
+                    <span>Enquire</span>
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -221,16 +252,45 @@ export default function GalleryLightbox({
                 </div>
               </div>
 
-              <div className="mt-8 border-t border-white/10 pt-6">
+              <div className="mt-8 flex flex-col gap-3 border-t border-white/10 pt-6">
+                {enquiry && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = currentItem;
+                      void trackEvent("quote_cta_click", {
+                        placement: "gallery_lightbox",
+                        categorySlug: target.categorySlug || "custom-metalwork",
+                      });
+                      closeLightbox();
+                      enquiry.openEnquiryModal({
+                        title: `Quote: ${target.title}`,
+                        subtitle: `${target.category} · ${target.material}`,
+                        productName: target.title,
+                        categorySlug: target.categorySlug || "custom-metalwork",
+                        placement: "gallery_page",
+                      });
+                    }}
+                    className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-textGold bg-textGold px-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-black transition hover:bg-white"
+                  >
+                    <FileText size={16} /> Get Free Quote for Similar Design
+                  </button>
+                )}
                 <a
                   href={`https://wa.me/919634776691?text=${encodeURIComponent(
                     `Hello Afsha Creative Solution, I saw this design in your gallery and would like a quote:\n\nProject: ${currentItem.title}\nCategory: ${currentItem.category}\nMaterial: ${currentItem.material}`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex w-full items-center justify-center gap-2 rounded-full border border-textGold bg-textGold px-6 py-3.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-black transition hover:bg-white"
+                  onClick={() => {
+                    void trackEvent("whatsapp_click", {
+                      placement: "gallery_lightbox",
+                      categorySlug: currentItem.categorySlug || "custom-metalwork",
+                    });
+                  }}
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-white transition hover:border-textGold hover:text-textGold"
                 >
-                  <MessageCircle size={16} /> Request This Design
+                  <MessageCircle size={16} /> Discuss on WhatsApp
                 </a>
               </div>
             </div>

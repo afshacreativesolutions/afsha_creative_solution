@@ -3,12 +3,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { notFound } from "next/navigation";
-import { getPublicProduct, getPublicProducts } from "@/lib/catalog";
+import { getPublicCategories, getPublicProduct, getPublicProducts } from "@/lib/catalog";
 import { getPublishedCmsSiteSettings } from "@/lib/cms/queries";
 import type { ProductRecord } from "@/lib/catalog-types";
 import { absoluteUrl, canonicalUrl, SITE_NAME, buildWhatsAppQuoteUrl } from "@/lib/site-config";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import FAQSection from "@/components/cms/sections/FAQSection";
 import JsonLd from "@/components/JsonLd";
+import LeadEnquiryForm from "@/components/lead/LeadEnquiryForm";
+import OpenQuoteButton from "@/components/lead/OpenQuoteButton";
+import TrackedActionLink from "@/components/lead/TrackedActionLink";
 import DesignQuoteButton from "./design-quote-button";
 
 type ProductPageProps = { params: Promise<{ slug: string }> };
@@ -88,10 +92,11 @@ function relatedImage(product: ProductRecord) {
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const [product, siteSettings, allProducts] = await Promise.all([
+  const [product, siteSettings, allProducts, categories] = await Promise.all([
     getPublicProduct(slug),
     getPublishedCmsSiteSettings(),
     getPublicProducts(),
+    getPublicCategories(),
   ]);
   if (!product) notFound();
 
@@ -170,14 +175,33 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <p className="text-xs uppercase tracking-[0.14em] text-white/40">
               Made to measure · Crafted in Moradabad
             </p>
-            <a
-              href={mainQuoteUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-flex min-h-11 items-center gap-4 border-b border-textGold/60 pb-2 text-[10px] uppercase tracking-[0.13em] text-textGold transition-colors hover:border-textGold hover:text-white sm:mt-4 sm:tracking-[0.18em]"
-            >
-              Request a custom quote <ArrowUpRight size={15} />
-            </a>
+            <div className="mt-3 flex flex-wrap items-center gap-3 sm:mt-4">
+              <OpenQuoteButton
+                label="Get a Free Quote"
+                prefill={{
+                  title: `Quote: ${product.name}`,
+                  productId: product.id,
+                  productSlug: product.slug,
+                  productName: product.name,
+                  categorySlug: product.category?.slug || "custom-metalwork",
+                  placement: "product_page",
+                }}
+              />
+              <TrackedActionLink
+                href={mainQuoteUrl}
+                eventName="whatsapp_click"
+                trackingProps={{
+                  placement: "product_page_hero",
+                  productSlug: product.slug,
+                  categorySlug: product.category?.slug || "custom-metalwork",
+                }}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center gap-2 border-b border-textGold/60 pb-1 text-[10px] uppercase tracking-[0.14em] text-textGold transition-colors hover:border-textGold hover:text-white"
+              >
+                WhatsApp Us <ArrowUpRight size={14} />
+              </TrackedActionLink>
+            </div>
           </div>
         </div>
       </section>
@@ -232,9 +256,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                   {image.url && (
                     <DesignQuoteButton
                       sharePath={designPath}
+                      productId={product.id}
+                      productSlug={product.slug}
+                      categorySlug={product.category?.slug || "custom-metalwork"}
                       productName={product.name}
                       designCode={designCode}
-                      className="absolute right-2 top-2 inline-flex min-h-9 items-center gap-1 border border-white/30 bg-black/70 px-2 text-[8px] uppercase tracking-[0.08em] text-white transition-colors hover:border-textGold hover:text-textGold sm:right-4 sm:top-4 sm:min-h-10 sm:gap-1.5 sm:px-3 sm:text-[9px] sm:tracking-[0.12em]"
+                      className="absolute right-2 top-2 inline-flex min-h-10 cursor-pointer items-center gap-1 border border-white/30 bg-black/75 px-2.5 text-[9px] uppercase tracking-[0.08em] text-white transition-colors hover:border-textGold hover:text-textGold sm:right-4 sm:top-4 sm:min-h-11 sm:gap-1.5 sm:px-3 sm:tracking-[0.12em]"
                     />
                   )}
                 </figure>
@@ -318,6 +345,64 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           )}
         </section>
       )}
+
+      <section
+        id="product-enquiry"
+        aria-label="Product quote enquiry"
+        className="mx-auto max-w-5xl scroll-mt-20 border-t border-white/10 px-4 py-10 sm:px-6 sm:py-16"
+      >
+        <LeadEnquiryForm
+          categories={categories.map(({ slug: catSlug, name }) => ({ slug: catSlug, name }))}
+          defaultCategory={product.category?.slug || "custom-metalwork"}
+          productId={product.id}
+          productSlug={product.slug}
+          productName={product.name}
+          placement="product_page"
+          whatsappNumber={siteSettings.site_identity.whatsappNumber}
+          heading={`Get a Quote for ${product.name}`}
+          subheading="Share your site dimensions and city to receive an estimated fabrication price and design guidance."
+        />
+      </section>
+
+      <div className="border-t border-white/10">
+        <FAQSection
+          content={{
+            sectionId: "product-faq",
+            variant: "compact_home",
+            eyebrow: "Product Questions",
+            heading: `Common Questions About ${product.name}`,
+            description:
+              "Everything you need to know about custom sizing, finish choices, and installation.",
+            link: { label: "View All FAQs", href: "/faqs" },
+            items: [
+              {
+                category: "pricing",
+                question: `How is the cost estimated for ${product.name}?`,
+                answer:
+                  "Final pricing depends on opening dimensions, steel or iron section thickness, hardware selection, and finish coating. Share approximate measurements above or on WhatsApp for a tailored quote.",
+              },
+              {
+                category: "customization",
+                question: "Can this design be tailored to my site measurements?",
+                answer:
+                  "Yes. All products are custom fabricated to the exact width, height, and mounting condition measured at your site.",
+              },
+              {
+                category: "process",
+                question: "Do you handle site measurement and installation?",
+                answer:
+                  "Yes. Once we review your approximate dimensions and project photos, our team schedules site measurement and installation across Moradabad, Rampur, Sambhal, Amroha, Bareilly, and nearby NCR towns.",
+              },
+              {
+                category: "materials",
+                question: "Which protective finishes are available?",
+                answer:
+                  "We provide anti-corrosion primer bases with polyurethane (PU) automotive paints, matte or satin black textures, and brushed or mirror polishing on stainless steel grades.",
+              },
+            ],
+          }}
+        />
+      </div>
 
       {relatedProducts.length > 0 && (
         <section className="border-t border-white/10 bg-[#080808] px-4 py-12 sm:px-6 sm:py-20">

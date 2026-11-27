@@ -1,100 +1,105 @@
-import { CheckCircle2, ShieldAlert, Sparkles } from "lucide-react";
+import { CheckCircle2, ShieldAlert } from "lucide-react";
+import AdminCard from "@/components/admin/AdminCard";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { requireAdmin } from "@/lib/admin-auth";
-import { getAdminIntegrationsStatus } from "@/lib/crm";
 import { checkCmsTablesStatus } from "@/lib/cms/queries";
-import AdminNav from "../../admin-nav";
+import { getAdminIntegrationsStatus } from "@/lib/crm";
 
 export const metadata = { title: "Integrations & Diagnostic | Afsha Creative Solution" };
 
 export default async function AdminIntegrationsPage() {
-  const [, integrations, cmsStatus] = await Promise.all([
-    requireAdmin(),
+  await requireAdmin();
+  const [integrations, cmsStatus] = await Promise.all([
     getAdminIntegrationsStatus(),
     checkCmsTablesStatus(),
   ]);
 
   return (
-    <main className="min-h-screen bg-[#080808] text-white">
-      <AdminNav />
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-8 sm:py-12">
-        <div className="mb-8">
-          <div className="flex items-center gap-2">
-            <Sparkles size={20} className="text-textGold" />
-            <p className="text-[10px] uppercase tracking-[0.24em] text-textGold">
-              Architecture & API Diagnostics
-            </p>
-          </div>
-          <h1 className="mt-1 text-3xl font-light sm:text-4xl">System Health & Integrations</h1>
-          <p className="mt-1 text-xs text-white/50">
-            Live diagnostic of database connections, transactional messaging APIs, analytics tags, and webhooks
-          </p>
-        </div>
+    <main className="mx-auto max-w-5xl px-3 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <AdminPageHeader
+        eyebrow="Architecture & API Diagnostics"
+        title="System Health & Integrations"
+        description="Live diagnostic of Supabase connections, email notifications, WhatsApp webhook integration, and migrations."
+      />
 
-        <div className="grid gap-4">
-          {Object.entries(integrations).map(([key, item]) => {
-            const isOk = item.configured;
-            return (
-              <div
-                key={key}
-                className="flex flex-col gap-4 rounded-xl border border-white/10 bg-[#0d0d0d] p-5 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <div className="flex items-center gap-2.5">
-                    {isOk ? (
-                      <CheckCircle2 size={18} className="text-emerald-400" />
-                    ) : (
-                      <ShieldAlert size={18} className="text-amber-400" />
-                    )}
-                    <h2 className="text-sm font-medium text-white">{item.name}</h2>
-                  </div>
-                  <p className="mt-1.5 text-xs text-white/55 font-mono">{item.details}</p>
+      <div className="grid gap-3.5 sm:gap-4">
+        {Object.entries(integrations).map(([key, item]) => {
+          const isOk = item.configured;
+          return (
+            <div
+              key={key}
+              className="flex flex-col gap-3 rounded-xl border border-white/10 bg-[#0d0d0d] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2.5">
+                  {isOk ? (
+                    <CheckCircle2 size={18} className="shrink-0 text-emerald-400" />
+                  ) : (
+                    <ShieldAlert size={18} className="shrink-0 text-amber-400" />
+                  )}
+                  <h2 className="text-sm font-medium text-white">{item.name}</h2>
                 </div>
-
-                <div className="shrink-0">
-                  <span
-                    className={`rounded-full border px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] ${
-                      isOk
-                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-                        : "border-amber-500/40 bg-amber-500/10 text-amber-400"
-                    }`}
-                  >
-                    {isOk ? "Active" : "Needs Config"}
-                  </span>
-                </div>
+                <p className="mt-1.5 break-all font-mono text-xs text-white/55">
+                  {item.details}
+                </p>
               </div>
-            );
-          })}
-        </div>
 
-        {/* Database Migration Instructions Box */}
-        <div className="mt-8 rounded-xl border border-textGold/30 bg-[#121212] p-6">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-textGold">
-            Database Migration Reference
-          </h3>
-          <p className="mt-2 text-xs leading-relaxed text-white/70">
-            CRM & Customer Intelligence Migration:
-            <br />
-            <code className="text-textGold font-mono">
+              <div className="shrink-0">
+                <span
+                  className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                    isOk
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                      : "border-amber-500/40 bg-amber-500/10 text-amber-400"
+                  }`}
+                >
+                  {isOk ? "Active" : "Needs Config"}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <AdminCard
+        eyebrow="SQL Reference"
+        title="Database Migration Checklist"
+        className="mt-6"
+      >
+        <div className="space-y-4 text-xs leading-relaxed text-white/75">
+          <div>
+            <p className="font-medium text-white">1. CRM &amp; Customer Intelligence Migration</p>
+            <code className="mt-1 block break-all rounded bg-black/50 p-2 font-mono text-textGold">
               supabase/migrations/202611250001_customer_intelligence_and_crm.sql
             </code>
-          </p>
-          <p className="mt-3 text-xs leading-relaxed text-white/70">
-            Visual CMS & Media Library Migration (Status:{" "}
-            <strong className={cmsStatus.ready ? "text-emerald-400" : "text-amber-400"}>
-              {cmsStatus.ready ? `Active (${cmsStatus.pagesCount} pages)` : "Not applied yet"}
-            </strong>
-            ):
-            <br />
-            <code className="text-textGold font-mono">
+          </div>
+
+          <div>
+            <p className="font-medium text-white">
+              2. Visual CMS &amp; Media Library Migration{" "}
+              <span className={cmsStatus.ready ? "text-emerald-400" : "text-amber-400"}>
+                ({cmsStatus.ready ? `Active · ${cmsStatus.pagesCount} pages` : "Not applied yet"})
+              </span>
+            </p>
+            <code className="mt-1 block break-all rounded bg-black/50 p-2 font-mono text-textGold">
               supabase/migrations/202611260001_cms_and_media.sql
             </code>
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-white/60">
-            Execute these migration scripts in your Supabase SQL Editor in chronological order to
-            initialize all tables, Storage buckets, and Row Level Security policies.
+          </div>
+
+          <div>
+            <p className="font-medium text-white">
+              3. Lead Capture Columns &amp; Private Attachment Bucket Migration
+            </p>
+            <code className="mt-1 block break-all rounded bg-black/50 p-2 font-mono text-textGold">
+              supabase/migrations/202611260002_lead_capture_enhancements.sql
+            </code>
+          </div>
+
+          <p className="text-white/55">
+            Execute pending migration scripts chronologically in your Supabase SQL Editor to keep
+            tables, Storage buckets, and Row Level Security policies synchronized.
           </p>
         </div>
-      </div>
+      </AdminCard>
     </main>
   );
 }

@@ -49,6 +49,15 @@ export type LeadRecord = {
   assigned_to: string | null;
   lost_reason: string | null;
   follow_up_date: string | null;
+  city?: string | null;
+  product_slug?: string | null;
+  page_url?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  attachment_path?: string | null;
+  attachment_name?: string | null;
+  attachmentSignedUrl?: string | null;
   attribution: Record<string, unknown>;
   created_at: string;
   updated_at: string;
