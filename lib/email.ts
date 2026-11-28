@@ -1,11 +1,54 @@
+﻿import fs from "node:fs";
+import path from "node:path";
 import { createSupabaseServiceClient } from "./supabase/service";
+
+const templateCache = new Map<string, string>();
+
+function loadEmailTemplate(name: string) {
+  const cached = templateCache.get(name);
+  if (cached) return cached;
+  const filePath = path.join(process.cwd(), "email-templates", `${name}.html`);
+  const html = fs.readFileSync(filePath, "utf8");
+  templateCache.set(name, html);
+  return html;
+}
+
+export function renderEmailTemplate(
+  name: string,
+  variables: Record<string, string | number | boolean | null | undefined>
+) {
+  let html = loadEmailTemplate(name);
+  for (const [key, value] of Object.entries(variables)) {
+    const rendered =
+      value === null || value === undefined
+        ? ""
+        : key.endsWith("_HTML")
+          ? String(value)
+          : escapeHtml(String(value));
+    html = html.split(`{{{${key}}}}`).join(rendered);
+  }
+  return html;
+}
+
+export type EmailAttachment = {
+  filename: string;
+  content?: string;
+  path?: string;
+  content_id?: string;
+  content_type?: string;
+};
 
 export type SendEmailOptions = {
   to: string | string[];
   replyTo?: string;
   subject: string;
-  html: string;
+  html?: string;
   text?: string;
+  attachments?: EmailAttachment[];
+  template?: {
+    id: string;
+    variables?: Record<string, string | number | boolean | null | undefined>;
+  };
   leadId?: string;
   customerId?: string;
   messageType?: "transactional" | "marketing" | "notification";
@@ -17,6 +60,8 @@ export async function sendEmail({
   subject,
   html,
   text,
+  attachments,
+  template,
   leadId,
   customerId,
   messageType = "transactional",
@@ -43,8 +88,15 @@ export async function sendEmail({
         to: recipients,
         reply_to: replyTo,
         subject,
-        html,
-        text,
+        ...(attachments && attachments.length > 0 ? { attachments } : {}),
+        ...(template
+          ? {
+              template: {
+                id: template.id,
+                variables: template.variables ?? {},
+              },
+            }
+          : { html, text }),
       }),
     });
 
@@ -132,43 +184,32 @@ export function buildCustomerConfirmationHtml({
   siteUrl?: string;
   whatsappUrl: string;
 }) {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Your Metalwork Enquiry — Afsha Creative Solution</title>
-</head>
-<body style="background-color: #080808; color: #F5F5F5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 40px 20px;">
-  <div style="max-width: 600px; margin: 0 auto; background-color: #121212; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; overflow: hidden;">
-    <div style="background-color: #080808; padding: 28px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-      <h1 style="color: #D6A36F; font-size: 18px; letter-spacing: 0.25em; text-transform: uppercase; margin: 0;">AFSHA CREATIVE SOLUTION</h1>
-      <p style="color: #A7A7A7; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; margin: 6px 0 0;">Architectural Metalwork & Fabrication · Moradabad</p>
-    </div>
-    <div style="padding: 32px 28px;">
-      <h2 style="font-size: 20px; font-weight: 300; margin-top: 0; color: #FFFFFF;">Enquiry Received, ${escapeHtml(customerName)}</h2>
-      <p style="color: #A7A7A7; font-size: 14px; line-height: 1.6;">Thank you for contacting Afsha Creative Solution. We have received your project details for <strong>${escapeHtml(categoryName)}</strong> under reference number:</p>
-      
-      <div style="background-color: #080808; border-left: 3px solid #D6A36F; padding: 14px 18px; margin: 24px 0; border-radius: 4px;">
-        <span style="font-size: 10px; color: #A7A7A7; letter-spacing: 0.15em; text-transform: uppercase; display: block;">Reference Code</span>
-        <strong style="font-size: 16px; color: #D6A36F; letter-spacing: 0.08em;">${escapeHtml(referenceNumber)}</strong>
-      </div>
-
-      <p style="color: #A7A7A7; font-size: 14px; line-height: 1.6;">Our workshop master craftsmen will review your requirements, dimensions, and specifications to prepare a bespoke estimate or arrange an on-site inspection.</p>
-
-      <div style="margin: 32px 0 20px; text-align: center;">
-        <a href="${whatsappUrl}" style="background-color: #D6A36F; color: #080808; text-decoration: none; padding: 13px 28px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.18em; border-radius: 9999px; display: inline-block;">Connect on WhatsApp</a>
-      </div>
-    </div>
-    <div style="background-color: #080808; padding: 20px 28px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center; font-size: 11px; color: #666666;">
-      <p style="margin: 0;">Near KK Farm House Bishanpur Road, Harthala, Lodhipur, Moradabad, UP 244001</p>
-      <p style="margin: 6px 0 0;"><a href="${siteUrl}" style="color: #D6A36F; text-decoration: none;">Visit Website</a></p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  return renderEmailTemplate("enquiry-received", {
+    CUSTOMER_NAME: customerName,
+    CATEGORY: categoryName,
+    ENQUIRY_REFERENCE: referenceNumber,
+    WHATSAPP_URL: whatsappUrl,
+    SITE_URL: siteUrl,
+  });
 }
+
+function isSafeEmailImageSrc(src?: string): src is string {
+  if (!src) return false;
+  if (src.startsWith("cid:")) return /^cid:[a-zA-Z0-9._-]+$/.test(src);
+  return src.startsWith("https://");
+}
+
+function isSafeHttpsUrl(url?: string): url is string {
+  return Boolean(url && url.startsWith("https://"));
+}
+
+export type AdminNotificationProductContext = {
+  name: string;
+  category?: string;
+  description?: string;
+  pageUrl?: string;
+  imageSrc?: string;
+};
 
 export function buildAdminNotificationHtml({
   customerName,
@@ -179,10 +220,11 @@ export function buildAdminNotificationHtml({
   categoryName,
   message,
   dimensions,
-  material,
-  source,
   hasAttachment,
+  referenceImageUrl,
   submittedAt,
+  enquiryHeading,
+  product,
 }: {
   customerName: string;
   phone: string;
@@ -193,42 +235,82 @@ export function buildAdminNotificationHtml({
   message: string;
   dimensions?: string;
   material?: string;
-  source: string;
+  source?: string;
   hasAttachment?: boolean;
+  referenceImageUrl?: string;
   submittedAt: string;
+  enquiryHeading?: string;
+  product?: AdminNotificationProductContext;
 }) {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>New Lead [${escapeHtml(referenceNumber)}] — ${escapeHtml(customerName)}</title>
-</head>
-<body style="background-color: #080808; color: #F5F5F5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 30px 15px;">
-  <div style="max-width: 600px; margin: 0 auto; background-color: #121212; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 28px;">
-    <span style="background-color: #D6A36F; color: #000; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.12em;">New Lead Alert</span>
-    <h2 style="font-size: 20px; color: #FFF; margin: 16px 0 4px;">${escapeHtml(customerName)}</h2>
-    <p style="color: #D6A36F; font-size: 14px; margin: 0 0 20px;">Ref: ${escapeHtml(referenceNumber)} · Category: ${escapeHtml(categoryName)}</p>
+  const safeProductImage = isSafeEmailImageSrc(product?.imageSrc) ? product.imageSrc : "";
+  const safeProductUrl = isSafeHttpsUrl(product?.pageUrl) ? product.pageUrl : "";
 
-    <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #CCC; margin-bottom: 20px;">
-      <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); width: 140px; color: #888;">Phone:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #FFF;"><strong>${escapeHtml(phone)}</strong></td></tr>
-      <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">City / Location:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">${escapeHtml(city || "Not specified")}</td></tr>
-      <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">Email:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">${escapeHtml(email || "Not provided")}</td></tr>
-      <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">Dimensions:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">${escapeHtml(dimensions || "Not specified")}</td></tr>
-      <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">Material:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">${escapeHtml(material || "Not specified")}</td></tr>
-      <tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">Source:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">${escapeHtml(source)}</td></tr>
-      ${hasAttachment ? `<tr><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #888;">Reference Photo:</td><td style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); color: #D6A36F;">Attached in Admin Leads Workspace</td></tr>` : ""}
-      <tr><td style="padding: 8px 0; color: #888;">Time:</td><td style="padding: 8px 0;">${escapeHtml(submittedAt)}</td></tr>
-    </table>
+  const productSectionHtml = product
+    ? `<table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0;padding:0;border:1px solid #30291f;background:#171512;">
+        <tbody>
+          <tr>
+            <td style="padding:18px;">
+              <div style="font-size:9px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#c99f6c;margin-bottom:10px;">
+                Requested Product
+              </div>
+              ${
+                safeProductImage
+                  ? `<div style="margin-bottom:14px;">
+                      <img src="${escapeHtml(safeProductImage)}" alt="${escapeHtml(product.name)}" style="display:block;width:100%;max-height:280px;object-fit:cover;border:1px solid #30291f;border-radius:6px;" />
+                    </div>`
+                  : ""
+              }
+              <div style="font-size:18px;font-weight:400;line-height:1.35;color:#f5f1e9;">
+                ${escapeHtml(product.name)}
+              </div>
+              ${
+                product.category
+                  ? `<div style="margin-top:4px;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#e1bd8d;">
+                      ${escapeHtml(product.category)}
+                    </div>`
+                  : ""
+              }
+              ${
+                product.description
+                  ? `<p style="margin:10px 0 0;font-size:13px;line-height:1.6;color:#c8c1b8;">
+                      ${escapeHtml(product.description)}
+                    </p>`
+                  : ""
+              }
+              ${
+                safeProductUrl
+                  ? `<div style="margin-top:14px;">
+                      <a href="${escapeHtml(safeProductUrl)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 18px;border:1px solid #c99f6c;border-radius:999px;font-size:10px;font-weight:bold;letter-spacing:1.6px;text-transform:uppercase;color:#e1bd8d;text-decoration:none;">
+                        View Product Page →
+                      </a>
+                    </div>`
+                  : ""
+              }
+            </td>
+          </tr>
+        </tbody>
+      </table>`
+    : "";
 
-    <div style="background-color: #080808; border: 1px solid rgba(255,255,255,0.08); padding: 16px; border-radius: 6px; margin-top: 15px;">
-      <span style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 8px;">Project Requirements:</span>
-      <p style="font-size: 13px; line-height: 1.6; color: #EEE; margin: 0; white-space: pre-wrap;">${escapeHtml(message)}</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  return renderEmailTemplate("new-enquiry-notification", {
+    CUSTOMER_NAME: customerName,
+    CUSTOMER_PHONE: phone,
+    CUSTOMER_EMAIL: email || "Not provided",
+    ENQUIRY_HEADING: enquiryHeading || "New project enquiry",
+    CATEGORY: categoryName,
+    PRODUCT: product?.name || categoryName,
+    CITY: city || "Not provided",
+    DIMENSIONS: dimensions || "Not provided",
+    REFERENCE_IMAGE: hasAttachment ? "Customer photo attached (view in admin leads)" : "None",
+    REFERENCE_IMAGE_HTML: isSafeHttpsUrl(referenceImageUrl)
+      ? `<div style="margin-top:16px;"><div style="margin-bottom:8px;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#c99f6c;">Customer Reference Photo</div><img src="${escapeHtml(referenceImageUrl)}" alt="Customer reference photo" style="max-width:100%;border:1px solid #30291f;border-radius:6px;" /></div>`
+      : "",
+    PRODUCT_SECTION_HTML: productSectionHtml,
+    ENQUIRY_REFERENCE: referenceNumber,
+    MESSAGE: message,
+    SUBMITTED_AT: submittedAt,
+    SITE_URL: "https://www.afshacreative.in",
+  });
 }
 
 function escapeHtml(value: string) {

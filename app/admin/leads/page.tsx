@@ -251,7 +251,18 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
               </div>
 
               <div className="rounded-lg border border-white/10 bg-black/45 p-3 text-xs">
-                <p className="font-medium text-white">{lead.title}</p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <p className="font-medium text-white">{lead.title}</p>
+                  {(lead.attribution?.enquiry_type === "product_email_quote" ||
+                    lead.attribution?.enquiry_type === "product_quote" ||
+                    Boolean(lead.attribution?.product_slug)) && (
+                    <span className="rounded border border-textGold/40 bg-textGold/10 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] text-textGold">
+                      {lead.attribution?.enquiry_type === "product_email_quote"
+                        ? "Product Quote · Email"
+                        : "Product Quote"}
+                    </span>
+                  )}
+                </div>
                 {lead.dimensions && (
                   <p className="mt-0.5 text-[11px] text-white/55">Dimensions: {lead.dimensions}</p>
                 )}
@@ -354,7 +365,18 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td className="max-w-xs px-5 py-4">
-                    <span className="font-medium text-white">{lead.title}</span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-medium text-white">{lead.title}</span>
+                      {(lead.attribution?.enquiry_type === "product_email_quote" ||
+                        lead.attribution?.enquiry_type === "product_quote" ||
+                        Boolean(lead.attribution?.product_slug)) && (
+                        <span className="rounded border border-textGold/40 bg-textGold/10 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] text-textGold">
+                          {lead.attribution?.enquiry_type === "product_email_quote"
+                            ? "Product Quote · Email"
+                            : "Product Quote"}
+                        </span>
+                      )}
+                    </div>
                     {lead.dimensions && (
                       <span className="block text-[11px] text-white/55">
                         Size: {lead.dimensions}

@@ -32,8 +32,27 @@ const signedUrlCache = new Map<string, { url: string; expiresAt: number }>();
 async function withSignedImages(supabase: any, products: ProductRecord[]): Promise<ProductRecord[]> {
   if (!supabase) return products;
   const now = Date.now();
-  const allPaths = [...new Set(products.flatMap((product) => product.images.map((image) => image.storage_path)))];
-  if (!allPaths.length) return products;
+  const allPaths = [
+    ...new Set(
+      products.flatMap((product) =>
+        product.images
+          .map((image) => image.storage_path)
+          .filter((path) => Boolean(path) && !path.startsWith("http") && !path.startsWith("/"))
+      )
+    ),
+  ];
+  if (!allPaths.length) {
+    return products.map((product) => ({
+      ...product,
+      images: product.images.map((image) => ({
+        ...image,
+        url:
+          image.storage_path.startsWith("http") || image.storage_path.startsWith("/")
+            ? image.storage_path
+            : "",
+      })),
+    }));
+  }
 
   // Only request signed URLs for paths not already cached or expiring within 2 hours
   const missingPaths = allPaths.filter((path) => {
@@ -59,7 +78,10 @@ async function withSignedImages(supabase: any, products: ProductRecord[]): Promi
     ...product,
     images: product.images.map((image) => ({
       ...image,
-      url: signedUrlCache.get(image.storage_path)?.url || "",
+      url:
+        image.storage_path.startsWith("http") || image.storage_path.startsWith("/")
+          ? image.storage_path
+          : signedUrlCache.get(image.storage_path)?.url || "",
     })),
   }));
 }

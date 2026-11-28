@@ -51,7 +51,7 @@ export const DEFAULT_SITE_SETTINGS: CmsSiteSettingsBundle = {
     brandSubtitle: "CREATIVE SOLUTION",
     whatsappNumber: BUSINESS_WHATSAPP_NUMBER,
     whatsappDefaultMessage:
-      "Hello Afsha Creative Solution, I found your website and would like to discuss a metal fabrication project.",
+      "Hello Afsha Creative Solutions!\n\nI'd like to know more about your metal fabrication services.\n\nCould you please share your available services and estimated pricing?\n\nThank you!",
     showFloatingWhatsapp: true,
     phoneDisplay: BUSINESS_PHONE_DISPLAY,
     phoneHref: "tel:+919634776691",

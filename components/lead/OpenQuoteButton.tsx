@@ -24,10 +24,21 @@ export default function OpenQuoteButton({
 
   const handleClick = () => {
     const isProduct = Boolean(prefill?.productSlug || prefill?.productId);
-    void trackEvent(isProduct ? "product_enquiry_click" : "quote_cta_click", {
+    const isCategory =
+      !isProduct &&
+      Boolean(prefill?.categorySlug) &&
+      (prefill?.placement === "category_page" || prefill?.placement === "category_card");
+    const eventName = isProduct
+      ? "product_enquiry_click"
+      : isCategory
+        ? "category_enquiry_click"
+        : "quote_cta_click";
+    void trackEvent(eventName, {
       placement: prefill?.placement || "open_quote_button",
+      channel: "quote_modal",
       categorySlug: prefill?.categorySlug || null,
       productSlug: prefill?.productSlug || null,
+      sourcePage: prefill?.pageUrl || null,
     });
     openEnquiryModal(prefill);
   };

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CMSPageRenderer from "@/components/cms/CMSPageRenderer";
 import { getPublicCategories, getPublicProducts } from "@/lib/catalog";
-import { getCmsPageForRender } from "@/lib/cms/queries";
+import { getCmsPageForRender, getPublishedCmsSiteSettings } from "@/lib/cms/queries";
 import { buildCmsPageMetadata } from "@/lib/cms/seo";
 import { getSupabaseConfig } from "@/lib/supabase/env";
 
@@ -17,10 +17,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const filters = await searchParams;
-  const [page, products, categories] = await Promise.all([
+  const [page, products, categories, siteSettings] = await Promise.all([
     getCmsPageForRender("/products"),
     getPublicProducts(),
     getPublicCategories(),
+    getPublishedCmsSiteSettings(),
   ]);
 
   if (!page) notFound();
@@ -34,6 +35,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         initialCategory: filters.category ?? "all",
         initialMaterial: filters.material ?? "all",
         isSupabaseConfigured: Boolean(getSupabaseConfig()),
+        whatsappNumber: siteSettings.site_identity.whatsappNumber,
       }}
     />
   );

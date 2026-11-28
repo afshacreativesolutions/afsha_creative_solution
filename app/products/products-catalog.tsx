@@ -4,6 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, Plus } from "lucide-react";
+import TrackedActionLink from "@/components/lead/TrackedActionLink";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 type CatalogProduct = {
   id: string;
@@ -23,15 +26,13 @@ function filterToken(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-const whatsappHref =
-  "https://wa.me/919634776691?text=Hello%20Afsha%20Creative%20Solution%2C%20I%20would%20like%20a%20quote%20for%20a%20custom%20metalwork%20product.";
-
 export default function ProductsCatalog({
   products,
   categories,
   initialCategory,
   initialMaterial,
   isConfigured,
+  whatsappNumber,
   embeddedInCms = false,
   sectionEyebrow = "The collection",
   sectionHeading = "Designed for the way you live.",
@@ -44,6 +45,7 @@ export default function ProductsCatalog({
   initialCategory: string;
   initialMaterial: string;
   isConfigured: boolean;
+  whatsappNumber?: string;
   embeddedInCms?: boolean;
   sectionEyebrow?: string;
   sectionHeading?: string;
@@ -81,6 +83,11 @@ export default function ProductsCatalog({
     [activeCategory, activeMaterial, products]
   );
 
+  const generalWhatsappHref = buildWhatsAppUrl({
+    intent: "general",
+    whatsappNumber,
+  });
+
   const collectionSection = (
     <section
       id="collection"
@@ -109,7 +116,7 @@ export default function ProductsCatalog({
               key={category.slug}
               aria-pressed={activeCategory === category.slug}
               onClick={() => setActiveCategory(category.slug)}
-              className={`shrink-0 rounded-full border px-4 py-2.5 text-[10px] uppercase tracking-[0.13em] transition-colors ${
+              className={`min-h-11 shrink-0 rounded-full border px-4 py-2.5 text-[10px] uppercase tracking-[0.13em] transition-colors ${
                 activeCategory === category.slug
                   ? "border-textGold bg-textGold text-black"
                   : "border-white/12 text-white/55 hover:border-white/35 hover:text-white"
@@ -141,7 +148,7 @@ export default function ProductsCatalog({
               key={material.token}
               aria-pressed={activeMaterial === material.token}
               onClick={() => setActiveMaterial(material.token)}
-              className={`shrink-0 rounded-full border px-3 py-2 text-[9px] uppercase tracking-[0.12em] transition-colors ${
+              className={`min-h-10 shrink-0 rounded-full border px-3.5 py-2 text-[9px] uppercase tracking-[0.12em] transition-colors ${
                 activeMaterial === material.token
                   ? "border-textGold/70 text-textGold"
                   : "border-white/10 text-white/45 hover:border-white/30 hover:text-white"
@@ -155,46 +162,87 @@ export default function ProductsCatalog({
 
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-3">
-          {filteredProducts.map((product) => (
-            <Link key={product.id} href={`/products/${product.slug}`} className="group block">
-              <div className="relative aspect-[0.91] overflow-hidden rounded-md bg-[#111]">
-                {product.imageUrl && (
-                  <Image
-                    src={product.imageUrl}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10 opacity-70 transition-opacity group-hover:opacity-100" />
-                <span className="absolute left-4 top-4 text-[10px] tracking-[0.18em] text-white/75">
-                  {product.number}
-                </span>
-                <span className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/45 bg-black/20 text-white transition-all group-hover:border-textGold group-hover:bg-textGold group-hover:text-black">
-                  <ArrowUpRight size={17} strokeWidth={1.4} />
-                </span>
-              </div>
-              <div className="flex items-start justify-between gap-4 border-b border-white/10 py-4 transition-colors group-hover:border-textGold/50">
-                <div>
-                  <p className="mb-2 text-[9px] uppercase tracking-[0.2em] text-textGold">
-                    {product.category} <span className="px-1 text-white/25">/</span>{" "}
-                    {product.finish}
-                  </p>
-                  <h3 className="text-lg font-light text-white">{product.name}</h3>
-                  {product.shortDescription && (
-                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">
-                      {product.shortDescription}
-                    </p>
-                  )}
+          {filteredProducts.map((product) => {
+            const productPath = `/products/${product.slug}`;
+            const productWaHref = buildWhatsAppUrl({
+              intent: "product",
+              whatsappNumber,
+              productName: product.name,
+              productUrl: productPath,
+            });
+
+            return (
+              <article key={product.id} className="group flex flex-col">
+                <Link href={productPath} className="block">
+                  <div className="relative aspect-[0.91] overflow-hidden rounded-md bg-[#111]">
+                    {product.imageUrl && (
+                      <Image
+                        src={product.imageUrl}
+                        alt={product.name}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10 opacity-70 transition-opacity group-hover:opacity-100" />
+                    <span className="absolute left-4 top-4 text-[10px] tracking-[0.18em] text-white/75">
+                      {product.number}
+                    </span>
+                    <span className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/45 bg-black/20 text-white transition-all group-hover:border-textGold group-hover:bg-textGold group-hover:text-black">
+                      <ArrowUpRight size={17} strokeWidth={1.4} />
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4 pt-4">
+                    <div>
+                      <p className="mb-2 text-[9px] uppercase tracking-[0.2em] text-textGold">
+                        {product.category} <span className="px-1 text-white/25">/</span>{" "}
+                        {product.finish}
+                      </p>
+                      <h3 className="text-lg font-light text-white transition-colors group-hover:text-textGold">
+                        {product.name}
+                      </h3>
+                      {product.shortDescription && (
+                        <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/45">
+                          {product.shortDescription}
+                        </p>
+                      )}
+                    </div>
+                    <Plus
+                      size={16}
+                      className="mt-1 shrink-0 text-white/40 transition-transform duration-300 group-hover:rotate-45 group-hover:text-textGold"
+                    />
+                  </div>
+                </Link>
+
+                <div className="mt-auto flex items-center gap-2 border-b border-white/10 pb-4 pt-4">
+                  <TrackedActionLink
+                    href={productWaHref}
+                    eventName="product_enquiry_click"
+                    trackingProps={{
+                      placement: "product_card",
+                      channel: "whatsapp",
+                      productSlug: product.slug,
+                      categorySlug: product.categorySlug || "custom-metalwork",
+                      sourcePage: "/products",
+                    }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    ariaLabel={`Enquire on WhatsApp about ${product.name}`}
+                    className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-textGold/55 bg-textGold/10 px-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-textGold transition hover:bg-textGold hover:text-black"
+                  >
+                    <WhatsAppIcon size={14} />
+                    <span>Enquire on WhatsApp</span>
+                  </TrackedActionLink>
+                  <Link
+                    href={productPath}
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 px-4 text-[10px] uppercase tracking-[0.14em] text-white/75 transition hover:border-textGold/50 hover:text-white"
+                  >
+                    Details
+                  </Link>
                 </div>
-                <Plus
-                  size={16}
-                  className="mt-1 shrink-0 text-white/40 transition-transform duration-300 group-hover:rotate-45 group-hover:text-textGold"
-                />
-              </div>
-            </Link>
-          ))}
+              </article>
+            );
+          })}
         </div>
       ) : (
         <div className="border border-white/10 bg-[#080808] px-6 py-14 text-center">
@@ -281,13 +329,24 @@ export default function ProductsCatalog({
               Have a design in mind? Let&apos;s make it real.
             </h2>
           </div>
-          <a
-            href={whatsappHref}
-            className="group inline-flex min-h-12 w-full items-center justify-between gap-5 rounded-full border border-textGold/45 px-5 py-3 text-[10px] uppercase tracking-[0.14em] text-textGold transition-colors hover:bg-textGold hover:text-black sm:w-fit sm:justify-center sm:px-6 sm:py-4 sm:tracking-[0.18em]"
+          <TrackedActionLink
+            href={generalWhatsappHref}
+            eventName="whatsapp_click"
+            trackingProps={{
+              placement: "products_catalog_bottom_cta",
+              channel: "whatsapp",
+              sourcePage: "/products",
+            }}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex min-h-12 w-full items-center justify-between gap-4 rounded-full border border-textGold/60 bg-textGold/10 px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-textGold transition-colors hover:bg-textGold hover:text-black sm:w-fit sm:justify-center sm:px-6 sm:py-4 sm:tracking-[0.18em]"
           >
-            Discuss your project{" "}
+            <span className="inline-flex items-center gap-2">
+              <WhatsAppIcon size={15} />
+              <span>Enquire on WhatsApp</span>
+            </span>
             <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
-          </a>
+          </TrackedActionLink>
         </div>
       </section>
     </main>

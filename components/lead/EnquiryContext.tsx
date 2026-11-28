@@ -9,13 +9,20 @@ import {
   type ReactNode,
 } from "react";
 
+export type EnquiryMode = "quote" | "email_quote";
+
 export type EnquiryPrefill = {
   title?: string;
   subtitle?: string;
+  enquiryMode?: EnquiryMode;
   categorySlug?: string;
+  categoryName?: string;
   productId?: string;
   productSlug?: string;
   productName?: string;
+  productDescription?: string;
+  productImageUrl?: string;
+  productUrl?: string;
   designCode?: string;
   placement?: string;
   pageUrl?: string;

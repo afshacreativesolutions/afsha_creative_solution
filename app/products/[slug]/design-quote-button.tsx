@@ -1,8 +1,8 @@
 "use client";
 
-import { MessageCircle } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { useOptionalEnquiry } from "@/components/lead/EnquiryContext";
-import { buildWhatsAppQuoteUrl } from "@/lib/site-config";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { trackEvent } from "@/lib/tracker";
 
 type DesignQuoteButtonProps = {
@@ -12,6 +12,7 @@ type DesignQuoteButtonProps = {
   categorySlug?: string;
   productName: string;
   designCode?: string;
+  whatsappNumber?: string;
   className?: string;
 };
 
@@ -22,13 +23,16 @@ export default function DesignQuoteButton({
   categorySlug,
   productName,
   designCode,
+  whatsappNumber,
   className,
 }: DesignQuoteButtonProps) {
   const enquiry = useOptionalEnquiry();
-  const whatsappUrl = buildWhatsAppQuoteUrl({
+  const whatsappUrl = buildWhatsAppUrl({
+    intent: "product",
     productName,
     designCode,
-    sharePath,
+    productUrl: sharePath,
+    whatsappNumber,
   });
 
   if (enquiry) {
@@ -40,8 +44,10 @@ export default function DesignQuoteButton({
           e.stopPropagation();
           void trackEvent("product_enquiry_click", {
             placement: "product_design_card",
+            channel: "quote_modal",
             categorySlug: categorySlug || "custom-metalwork",
             productSlug: productSlug || null,
+            sourcePage: productSlug ? `/products/${productSlug}` : sharePath,
           });
           enquiry.openEnquiryModal({
             title: `Quote: ${productName}`,
@@ -59,7 +65,7 @@ export default function DesignQuoteButton({
         aria-label={`Get a quote for ${productName} ${designCode || ""}`}
         className={className}
       >
-        <MessageCircle size={12} /> Get quote
+        <WhatsAppIcon size={12} /> Get quote
       </button>
     );
   }
@@ -70,16 +76,18 @@ export default function DesignQuoteButton({
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => {
-        void trackEvent("whatsapp_click", {
+        void trackEvent("product_enquiry_click", {
           placement: "product_design_card",
+          channel: "whatsapp",
           categorySlug: categorySlug || "custom-metalwork",
           productSlug: productSlug || null,
+          sourcePage: productSlug ? `/products/${productSlug}` : sharePath,
         });
       }}
-      aria-label={`Get a quote for ${productName} ${designCode || ""}`}
+      aria-label={`Enquire on WhatsApp for ${productName} ${designCode || ""}`}
       className={className}
     >
-      <MessageCircle size={12} /> Get quote
+      <WhatsAppIcon size={12} /> Enquire
     </a>
   );
 }

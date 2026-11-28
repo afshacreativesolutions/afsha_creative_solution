@@ -72,6 +72,7 @@ export type CatalogRuntimeContext = {
   initialCategory?: string;
   initialMaterial?: string;
   isSupabaseConfigured?: boolean;
+  whatsappNumber?: string;
 };
 
 export default function ProductCategoryGridSection({
@@ -181,6 +182,7 @@ export default function ProductCategoryGridSection({
         initialCategory={catalogContext?.initialCategory ?? "all"}
         initialMaterial={catalogContext?.initialMaterial ?? "all"}
         isConfigured={catalogContext?.isSupabaseConfigured ?? true}
+        whatsappNumber={catalogContext?.whatsappNumber}
         embeddedInCms
         sectionEyebrow={content.eyebrow}
         sectionHeading={content.heading}

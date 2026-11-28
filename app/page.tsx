@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Check, MapPin, MessageCircle } from "lucide-react";
+import { Check, MapPin } from "lucide-react";
 import CMSPageRenderer from "@/components/cms/CMSPageRenderer";
 import LeadEnquiryForm from "@/components/lead/LeadEnquiryForm";
 import OpenQuoteButton from "@/components/lead/OpenQuoteButton";
+import TrackedActionLink from "@/components/lead/TrackedActionLink";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { getPublicCategories, getPublicProducts } from "@/lib/catalog";
 import { getCmsPageForRender, getPublishedCmsSiteSettings } from "@/lib/cms/queries";
 import { buildCmsPageMetadata } from "@/lib/cms/seo";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export const revalidate = 300;
 
@@ -82,11 +85,10 @@ export default async function Home() {
       (s.content as { variant?: string })?.variant === "quote_form"
   );
 
-  const waDigits =
-    (settings.site_identity.whatsappNumber || "919634776691").replace(/\D/g, "") || "919634776691";
-  const waHref = `https://wa.me/${waDigits}?text=${encodeURIComponent(
-    "Hello Afsha Creative Solution, I would like a free quote for a gate, door, or railing."
-  )}`;
+  const waHref = buildWhatsAppUrl({
+    intent: "general",
+    whatsappNumber: settings.site_identity.whatsappNumber,
+  });
 
   return (
     <>
@@ -149,14 +151,20 @@ export default async function Home() {
                     label="Book Site Visit"
                     prefill={{ title: "Book Site Measurement & Quote", placement: "service_areas" }}
                   />
-                  <a
+                  <TrackedActionLink
                     href={waHref}
+                    eventName="whatsapp_click"
+                    trackingProps={{
+                      placement: "homepage_service_areas",
+                      channel: "whatsapp",
+                      sourcePage: "/",
+                    }}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex min-h-[46px] items-center gap-2 rounded-full border border-white/20 px-5 text-[10px] uppercase tracking-[0.16em] text-white transition hover:border-textGold hover:text-textGold"
+                    className="inline-flex min-h-[46px] items-center gap-2 rounded-full border border-textGold/50 bg-textGold/10 px-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-textGold transition hover:bg-textGold hover:text-black"
                   >
-                    <MessageCircle size={15} /> WhatsApp Us
-                  </a>
+                    <WhatsAppIcon size={15} /> Enquire on WhatsApp
+                  </TrackedActionLink>
                 </div>
               </div>
 

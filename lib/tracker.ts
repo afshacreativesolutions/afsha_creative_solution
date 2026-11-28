@@ -10,6 +10,13 @@ export type AllowedEventName =
   | "enquiry_form_success"
   | "enquiry_form_error"
   | "product_enquiry_click"
+  | "product_email_quote_click"
+  | "product_whatsapp_click"
+  | "product_enquiry_form_start"
+  | "product_enquiry_form_success"
+  | "product_enquiry_form_error"
+  | "category_enquiry_click"
+  | "gallery_enquiry_click"
   | "contact_form_submit"
   | "whatsapp_click"
   | "phone_click"
@@ -28,6 +35,13 @@ export const ALLOWED_EVENT_NAMES = new Set<AllowedEventName>([
   "enquiry_form_success",
   "enquiry_form_error",
   "product_enquiry_click",
+  "product_email_quote_click",
+  "product_whatsapp_click",
+  "product_enquiry_form_start",
+  "product_enquiry_form_success",
+  "product_enquiry_form_error",
+  "category_enquiry_click",
+  "gallery_enquiry_click",
   "contact_form_submit",
   "whatsapp_click",
   "phone_click",
@@ -41,12 +55,16 @@ const SENSITIVE_PROPERTY_KEYS = new Set([
   "name",
   "customer_name",
   "phone",
+  "phone_number",
   "mobile",
+  "whatsappnumber",
   "email",
   "message",
   "project_details",
+  "enquirydetails",
   "city",
   "location",
+  "customerlocation",
   "address",
   "attachment",
 ]);
@@ -153,6 +171,7 @@ export async function trackEvent(
     if (
       eventName === "quote_form_submit" ||
       eventName === "enquiry_form_success" ||
+      eventName === "product_enquiry_form_success" ||
       eventName === "contact_form_submit"
     ) {
       w.fbq("track", "Lead", safeProperties);
@@ -160,7 +179,15 @@ export async function trackEvent(
       w.fbq("track", "ViewContent", safeProperties);
     } else if (eventName === "page_view") {
       w.fbq("track", "PageView");
-    } else if (eventName === "whatsapp_click" || eventName === "phone_click") {
+    } else if (
+      eventName === "whatsapp_click" ||
+      eventName === "product_whatsapp_click" ||
+      eventName === "phone_click" ||
+      ((eventName === "product_enquiry_click" ||
+        eventName === "category_enquiry_click" ||
+        eventName === "gallery_enquiry_click") &&
+        safeProperties.channel === "whatsapp")
+    ) {
       w.fbq("track", "Contact", safeProperties);
     } else {
       w.fbq("trackCustom", eventName, safeProperties);

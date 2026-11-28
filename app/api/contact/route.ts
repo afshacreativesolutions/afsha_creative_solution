@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { getPublicCategories } from "@/lib/catalog";
+import { getPublicCategories, getPublicProduct } from "@/lib/catalog";
 import {
   ALLOWED_IMAGE_TYPES,
   sanitizeUploadBaseName,
@@ -11,14 +11,18 @@ import {
   MAX_LEAD_PHOTO_BYTES,
   validateLeadFields,
 } from "@/lib/lead-validation";
+import { loadImageBufferForAssetOrRemote } from "@/lib/og-image-loader";
+import { canonicalUrl } from "@/lib/site-config";
 import { getPublicSiteOrigin } from "@/lib/site-url";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import {
   buildAdminNotificationHtml,
-  buildCustomerConfirmationHtml,
   sendEmail,
+  type EmailAttachment,
 } from "@/lib/email";
-import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { getPublishedCmsSiteSettings } from "@/lib/cms/queries";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { sendWhatsAppMessage } from "@/lib/whatsapp-cloud";
 
 const SAFE_LEGACY_SOURCES = new Set([
   "quote_form",
@@ -198,11 +202,30 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const categories = await getPublicCategories().catch(() => []);
+  const [categories, siteSettings, trustedProduct] = await Promise.all([
+    getPublicCategories().catch(() => []),
+    getPublishedCmsSiteSettings().catch(() => null),
+    data.productSlug ? getPublicProduct(data.productSlug).catch(() => null) : Promise.resolve(null),
+  ]);
+
+  const resolvedCategorySlug = trustedProduct?.category?.slug || data.category;
   const categoryName =
-    data.category === "other"
+    resolvedCategorySlug === "other"
       ? "Other Architectural Metalwork"
-      : categories.find((item) => item.slug === data.category)?.name ?? data.category;
+      : trustedProduct?.category?.name ??
+        categories.find((item) => item.slug === resolvedCategorySlug)?.name ??
+        resolvedCategorySlug;
+
+  const resolvedProductName = trustedProduct?.name || data.productName;
+  const resolvedProductSlug = trustedProduct?.slug || data.productSlug;
+  const resolvedProductId = trustedProduct?.id || data.productId;
+  const resolvedProductDescription =
+    trustedProduct?.short_description || trustedProduct?.description || "";
+  const resolvedProductPageUrl = resolvedProductSlug
+    ? canonicalUrl(`/products/${resolvedProductSlug}`)
+    : data.pageUrl
+      ? canonicalUrl(data.pageUrl)
+      : canonicalUrl("/");
 
   const enquiryReference = `AF-${Date.now().toString(36).toUpperCase()}-${crypto
     .randomUUID()
@@ -210,13 +233,12 @@ export async function POST(request: NextRequest) {
     .toUpperCase()}`;
 
   const siteUrl = (await getPublicSiteOrigin()) || "https://www.afshacreative.in";
-  const whatsappUrl = new URL("https://wa.me/919634776691");
-  whatsappUrl.searchParams.set(
-    "text",
-    `Hello Afsha Creative Solution, I just submitted enquiry ${enquiryReference} for ${
-      data.productName || categoryName
-    } from ${data.city || "India"} and would like to discuss my project.`
-  );
+  const whatsappUrlString = buildWhatsAppUrl({
+    whatsappNumber: siteSettings?.site_identity.whatsappNumber,
+    message: `Hello Afsha Creative Solutions! I just submitted enquiry ${enquiryReference} for ${
+      resolvedProductName || categoryName
+    }${data.city ? ` in ${data.city}` : ""} and would like to discuss my project.`,
+  });
 
   const submittedAt = new Intl.DateTimeFormat("en-IN", {
     dateStyle: "medium",
@@ -298,23 +320,27 @@ export async function POST(request: NextRequest) {
 
       if (customerId) {
         const safeDbSource = SAFE_LEGACY_SOURCES.has(data.source) ? data.source : "quote_form";
-        const displayTitle = data.productName
-          ? `Quote Request: ${data.productName}${data.designCode ? ` (${data.designCode})` : ""}`
+        const displayTitle = resolvedProductName
+          ? data.enquiryType === "product_email_quote"
+            ? `Product Quote Request (Email): ${resolvedProductName}${data.designCode ? ` (${data.designCode})` : ""}`
+            : `Product Quote Request: ${resolvedProductName}${data.designCode ? ` (${data.designCode})` : ""}`
           : `Quote Request: ${categoryName}`;
         const leadMessage =
           data.message ||
-          `Enquiry submitted via ${data.placement} for ${data.productName || categoryName} (${
-            data.city || "Moradabad"
-          }).`;
+          `Enquiry submitted via ${data.placement} for ${resolvedProductName || categoryName}${
+            data.city ? ` (${data.city})` : ""
+          }.`;
 
         const attribution = {
           ip_hash: ipHash,
           submitted_at: submittedAt,
-          city: data.city,
+          city: data.city || undefined,
           placement: data.placement,
+          enquiry_type: data.enquiryType,
           page_url: data.pageUrl || undefined,
-          product_slug: data.productSlug || undefined,
-          product_name: data.productName || undefined,
+          product_slug: resolvedProductSlug || undefined,
+          product_name: resolvedProductName || undefined,
+          product_category: categoryName,
           design_code: data.designCode || undefined,
           utm_source: data.utmSource || undefined,
           utm_medium: data.utmMedium || undefined,
@@ -329,8 +355,8 @@ export async function POST(request: NextRequest) {
           visitor_id: data.visitorId,
           session_id: data.sessionId,
           title: displayTitle,
-          category_slug: data.category,
-          product_id: data.productId || null,
+          category_slug: resolvedCategorySlug,
+          product_id: resolvedProductId || null,
           status: "new",
           priority: "medium",
           source: safeDbSource,
@@ -345,7 +371,7 @@ export async function POST(request: NextRequest) {
           .insert({
             ...baseLeadPayload,
             city: data.city || null,
-            product_slug: data.productSlug || null,
+            product_slug: resolvedProductSlug || null,
             page_url: data.pageUrl || null,
             utm_source: data.utmSource || null,
             utm_medium: data.utmMedium || null,
@@ -405,8 +431,10 @@ export async function POST(request: NextRequest) {
           new_values: {
             reference_number: enquiryReference,
             customer_name: data.name,
-            city: data.city,
+            city: data.city || null,
             category: categoryName,
+            product_slug: resolvedProductSlug || null,
+            enquiry_type: data.enquiryType,
             placement: data.placement,
           },
           ip_hash: ipHash,
@@ -419,7 +447,47 @@ export async function POST(request: NextRequest) {
 
   const adminEmailTo = process.env.CONTACT_TO_EMAIL || "afshacreativesolutions@gmail.com";
   const effectiveMessage =
-    data.message || `Customer requested a quote from ${data.placement} in ${data.city}.`;
+    data.message ||
+    `Customer requested a quote${resolvedProductName ? ` for ${resolvedProductName}` : ""} from ${data.placement}${data.city ? ` in ${data.city}` : ""}.`;
+
+  let referenceImageUrl: string | undefined;
+  if (attachmentPath && supabase) {
+    const { data: signed } = await supabase.storage
+      .from("lead-attachments")
+      .createSignedUrl(attachmentPath, 60 * 60 * 24 * 7);
+    referenceImageUrl = signed?.signedUrl;
+  }
+
+  // Resolve trusted product image ONLY from database/CMS records (never client-supplied URLs)
+  const emailAttachments: EmailAttachment[] = [];
+  let emailProductImageSrc: string | undefined;
+
+  if (resolvedProductName) {
+    const primaryProductImg =
+      trustedProduct?.images.find((img) => img.is_primary) ?? trustedProduct?.images[0];
+    const otherProductImgUrls = (trustedProduct?.images ?? [])
+      .filter((img) => img.id !== primaryProductImg?.id)
+      .map((img) => img.url);
+
+    const cidPayload = await loadImageBufferForAssetOrRemote(
+      [primaryProductImg?.url, ...otherProductImgUrls],
+      resolvedCategorySlug
+    );
+
+    if (cidPayload) {
+      emailAttachments.push({
+        filename: cidPayload.filename,
+        content: cidPayload.buffer.toString("base64"),
+        content_id: "product-image",
+        content_type: cidPayload.mime,
+      });
+      emailProductImageSrc = "cid:product-image";
+    } else {
+      emailProductImageSrc = resolvedProductSlug
+        ? canonicalUrl(`/products/${resolvedProductSlug}/opengraph-image`)
+        : canonicalUrl("/opengraph-image");
+    }
+  }
 
   const adminHtml = buildAdminNotificationHtml({
     customerName: data.name,
@@ -427,20 +495,41 @@ export async function POST(request: NextRequest) {
     email: data.email || undefined,
     city: data.city || undefined,
     referenceNumber: enquiryReference,
-    categoryName: data.productName ? `${data.productName} (${categoryName})` : categoryName,
+    categoryName,
     message: effectiveMessage,
     dimensions: data.dimensions || undefined,
     material: data.material || undefined,
     source: `${data.source}${data.pageUrl ? ` (${data.pageUrl})` : ""}`,
     hasAttachment: Boolean(attachmentPath),
+    referenceImageUrl,
     submittedAt,
+    enquiryHeading:
+      data.enquiryType === "product_email_quote"
+        ? "New Product Quote Request (Email)"
+        : resolvedProductName
+          ? "New Product Quote Request"
+          : "New project enquiry",
+    product: resolvedProductName
+      ? {
+          name: resolvedProductName,
+          category: categoryName,
+          description: resolvedProductDescription || undefined,
+          pageUrl: resolvedProductPageUrl,
+          imageSrc: emailProductImageSrc,
+        }
+      : undefined,
   });
+
+  const adminSubject = resolvedProductName
+    ? `New Product Quote Request — ${resolvedProductName} [${enquiryReference}]`
+    : `[New Lead ${enquiryReference}] ${data.name} (${data.city || "India"}) — ${categoryName}`;
 
   const adminEmailPromise = sendEmail({
     to: adminEmailTo,
     replyTo: data.email || undefined,
-    subject: `[New Lead ${enquiryReference}] ${data.name} (${data.city || "India"}) — ${data.productName || categoryName}`,
+    subject: adminSubject,
     html: adminHtml,
+    attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
     leadId,
     customerId,
     messageType: "notification",
@@ -448,18 +537,19 @@ export async function POST(request: NextRequest) {
 
   let customerEmailPromise: Promise<unknown> = Promise.resolve();
   if (data.email) {
-    const customerHtml = buildCustomerConfirmationHtml({
-      customerName: data.name,
-      referenceNumber: enquiryReference,
-      categoryName: data.productName || categoryName,
-      siteUrl,
-      whatsappUrl: whatsappUrl.toString(),
-    });
-
     customerEmailPromise = sendEmail({
       to: data.email,
-      subject: `Your Metalwork Enquiry [${enquiryReference}] — Afsha Creative Solution`,
-      html: customerHtml,
+      subject: `Your Metalwork Enquiry [${enquiryReference}] - Afsha Creative Solution`,
+      template: {
+        id: "f8c16ecb-a74b-4238-8046-991a320f78a2",
+        variables: {
+          CUSTOMER_NAME: data.name,
+          CATEGORY: resolvedProductName || categoryName,
+          ENQUIRY_REFERENCE: enquiryReference,
+          WHATSAPP_URL: whatsappUrlString,
+          SITE_URL: siteUrl,
+        },
+      },
       leadId,
       customerId,
       messageType: "transactional",
@@ -469,7 +559,7 @@ export async function POST(request: NextRequest) {
   const whatsAppInternalAlert = process.env.INTERNAL_NOTIFICATION_PHONE
     ? sendWhatsAppMessage({
         toPhone: process.env.INTERNAL_NOTIFICATION_PHONE,
-        textMessage: `New Metalwork Lead\nRef: ${enquiryReference}\nName: ${data.name}\nPhone: ${data.phone}\nCity: ${data.city || "Moradabad"}\nCategory: ${data.productName || categoryName}\nMessage: ${effectiveMessage.slice(0, 200)}`,
+        textMessage: `New Metalwork Lead\nRef: ${enquiryReference}\nName: ${data.name}\nPhone: ${data.phone}\nCity: ${data.city || "Not specified"}\nCategory: ${resolvedProductName || categoryName}\nMessage: ${effectiveMessage.slice(0, 200)}`,
         leadId,
         customerId,
         messageType: "notification",
@@ -481,7 +571,7 @@ export async function POST(request: NextRequest) {
   const responsePayload = {
     success: true as const,
     reference: enquiryReference,
-    whatsappUrl: whatsappUrl.toString(),
+    whatsappUrl: whatsappUrlString,
   };
 
   if (data.clientSubmissionId) {

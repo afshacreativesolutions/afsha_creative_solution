@@ -5,17 +5,18 @@ import {
   Check,
   Mail,
   MapPin,
-  MessageCircle,
   Phone,
 } from "lucide-react";
 import Map from "@/components/Map";
+import TrackedActionLink from "@/components/lead/TrackedActionLink";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import EnquiryForm from "@/app/contact/enquiry-form";
 import QuoteForm from "@/components/QuoteForm";
 import type { CategoryRecord } from "@/lib/catalog-types";
 import type { ContactInfoContent } from "@/lib/cms/types";
 
 const CONTACT_ICONS = {
-  whatsapp: MessageCircle,
+  whatsapp: WhatsAppIcon,
   phone: Phone,
   mail: Mail,
   map: MapPin,
@@ -181,14 +182,19 @@ export default function ContactInfoSection({
                     </a>
                   )}
                   {content.whatsappLink && (
-                    <a
+                    <TrackedActionLink
                       href={content.whatsappLink.href}
+                      eventName="whatsapp_click"
+                      trackingProps={{
+                        placement: "workshop_coverage",
+                        channel: "whatsapp",
+                      }}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex min-h-11 items-center gap-2 rounded-full border border-textGold bg-textGold px-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-black transition hover:bg-white"
                     >
-                      <MessageCircle size={14} /> {content.whatsappLink.label}
-                    </a>
+                      <WhatsAppIcon size={14} /> {content.whatsappLink.label}
+                    </TrackedActionLink>
                   )}
                 </div>
               )}

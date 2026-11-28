@@ -4,15 +4,18 @@ import Link from "next/link";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { getPublicProduct } from "@/lib/catalog";
+import { getPublishedCmsSiteSettings } from "@/lib/cms/queries";
 import {
   absoluteUrl,
   canonicalUrl,
   SITE_NAME,
-  buildWhatsAppQuoteUrl,
 } from "@/lib/site-config";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import JsonLd from "@/components/JsonLd";
 import ProductShareButton from "@/components/ProductShareButton";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import TrackedActionLink from "@/components/lead/TrackedActionLink";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
+import { ArrowLeft } from "lucide-react";
 
 type DesignPageProps = { params: Promise<{ slug: string; imageId: string }> };
 
@@ -77,15 +80,20 @@ export async function generateMetadata({ params }: DesignPageProps): Promise<Met
 
 export default async function DesignReferencePage({ params }: DesignPageProps) {
   const { slug, imageId } = await params;
-  const design = await getDesign(slug, imageId);
+  const [design, siteSettings] = await Promise.all([
+    getDesign(slug, imageId),
+    getPublishedCmsSiteSettings(),
+  ]);
   if (!design) notFound();
 
   const currentPath = `/products/${slug}/design/${imageId}`;
   const canonical = canonicalUrl(currentPath);
-  const whatsappHref = buildWhatsAppQuoteUrl({
+  const whatsappHref = buildWhatsAppUrl({
+    intent: "product",
+    whatsappNumber: siteSettings.site_identity.whatsappNumber,
     productName: design.product.name,
     designCode: design.designCode,
-    sharePath: currentPath,
+    productUrl: canonical,
   });
 
   const productCanonical = canonicalUrl(`/products/${slug}`);
@@ -157,14 +165,22 @@ export default async function DesignReferencePage({ params }: DesignPageProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <a
+          <TrackedActionLink
             href={whatsappHref}
+            eventName="product_enquiry_click"
+            trackingProps={{
+              placement: "product_design_page",
+              channel: "whatsapp",
+              productSlug: slug,
+              categorySlug: design.product.category?.slug || "custom-metalwork",
+              sourcePage: currentPath,
+            }}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex min-h-12 items-center gap-2 rounded-full border border-textGold bg-textGold px-6 text-[10px] font-semibold uppercase tracking-[0.16em] text-black transition hover:bg-white"
           >
-            <MessageCircle size={15} /> Request Quote on WhatsApp
-          </a>
+            <WhatsAppIcon size={15} /> Ask About This Product
+          </TrackedActionLink>
           <ProductShareButton
             title={`${design.product.name} – Design ${design.designCode}`}
             text={`Check out this custom ${design.product.name} design by Afsha Creative Solution.`}

@@ -1,16 +1,17 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { trackEvent } from "@/lib/tracker";
+import { trackEvent, type AllowedEventName } from "@/lib/tracker";
 
 type TrackedActionLinkProps = {
   href: string;
-  eventName: "whatsapp_click" | "phone_click";
-  trackingProps?: Record<string, string | number | boolean>;
+  eventName: AllowedEventName;
+  trackingProps?: Record<string, string | number | boolean | null | undefined>;
   target?: string;
   rel?: string;
   className?: string;
   ariaLabel?: string;
+  stopPropagation?: boolean;
   children: ReactNode;
 };
 
@@ -26,6 +27,7 @@ export default function TrackedActionLink({
   rel,
   className,
   ariaLabel,
+  stopPropagation = false,
   children,
 }: TrackedActionLinkProps) {
   return (
@@ -35,7 +37,10 @@ export default function TrackedActionLink({
       rel={rel}
       aria-label={ariaLabel}
       className={className}
-      onClick={() => {
+      onClick={(e) => {
+        if (stopPropagation) {
+          e.stopPropagation();
+        }
         void trackEvent(eventName, trackingProps || {});
       }}
     >

@@ -9,13 +9,16 @@ import CTASection from "@/components/CTASection";
 import JsonLd from "@/components/JsonLd";
 import LeadEnquiryForm from "@/components/lead/LeadEnquiryForm";
 import OpenQuoteButton from "@/components/lead/OpenQuoteButton";
+import TrackedActionLink from "@/components/lead/TrackedActionLink";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import CMSPageRenderer from "@/components/cms/CMSPageRenderer";
 import FAQSection from "@/components/cms/sections/FAQSection";
 import { getPublicCategories, getPublicProducts } from "@/lib/catalog";
 import { getCmsPageForRender, getPublishedCmsSiteSettings } from "@/lib/cms/queries";
 import { buildCmsPageMetadata } from "@/lib/cms/seo";
 import { images } from "@/utils/images";
-import { absoluteUrl } from "@/lib/seo";
+import { absoluteUrl, canonicalUrl, SITE_NAME } from "@/lib/seo";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 type CategoryPageProps = { params: Promise<{ slug: string }> };
 
@@ -32,8 +35,8 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   const description =
     category.description ||
     `Explore bespoke ${category.name.toLowerCase()} handcrafted in Moradabad by Afsha Creative Solutions. Made-to-measure sizing and premium finishes.`;
-  const canonical = `/categories/${category.slug}`;
-  const ogImageUrl = `https://www.afshacreative.in/categories/${category.slug}/opengraph-image`;
+  const canonical = canonicalUrl(`/categories/${category.slug}`);
+  const ogImageUrl = absoluteUrl(`/categories/${category.slug}/opengraph-image`);
 
   return {
     title,
@@ -42,8 +45,8 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     openGraph: {
       type: "website",
       locale: "en_IN",
-      siteName: "Afsha Creative Solution",
-      title,
+      siteName: SITE_NAME,
+      title: category.name,
       description,
       url: canonical,
       images: [
@@ -51,13 +54,13 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
           url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: `${category.name} — Afsha Creative Solution`,
+          alt: `${category.name} — ${SITE_NAME}`,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: category.name,
       description,
       images: [ogImageUrl],
     },
@@ -74,16 +77,30 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
   ]);
 
   if (cmsOverride) {
-    return <CMSPageRenderer page={cmsOverride} context={{ products, categories }} />;
+    return (
+      <CMSPageRenderer
+        page={cmsOverride}
+        context={{
+          products,
+          categories,
+          whatsappNumber: siteSettings.site_identity.whatsappNumber,
+        }}
+      />
+    );
   }
 
   const category = categories.find((item) => item.slug === slug);
   if (!category) notFound();
 
   const tpl = siteSettings.template_defaults.categoryDetail;
-  const whatsappUrl = `https://wa.me/${siteSettings.site_identity.whatsappNumber}?text=${encodeURIComponent(
-    `Hello ${siteSettings.site_identity.siteLegalName}, I would like a custom quote for ${category.name}.`
-  )}`;
+  const categoryPath = `/categories/${category.slug}`;
+  const whatsappNumber = siteSettings.site_identity.whatsappNumber;
+  const whatsappUrl = buildWhatsAppUrl({
+    intent: "category",
+    whatsappNumber,
+    categoryName: category.name,
+    categoryUrl: categoryPath,
+  });
 
   const categoryProducts = products.filter(
     (product) =>
@@ -129,7 +146,7 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
           "@type": "CollectionPage",
           name: category.name,
           description: category.description || undefined,
-          url: absoluteUrl(`/categories/${category.slug}`),
+          url: canonicalUrl(categoryPath),
         }}
       />
 
@@ -147,7 +164,7 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
         breadcrumbs={[
           { name: "Home", href: "/" },
           { name: "Categories", href: "/categories" },
-          { name: category.name, href: `/categories/${category.slug}` },
+          { name: category.name, href: categoryPath },
         ]}
         primaryCta={{ label: tpl.primaryCtaLabel, href: tpl.primaryCtaHref }}
         badges={tpl.badges}
@@ -161,15 +178,34 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
             title={`${category.name} Portfolio`}
             description={tpl.portfolioDescription}
           />
-          <OpenQuoteButton
-            label={`Quote for ${category.name}`}
-            prefill={{
-              title: `Quote: ${category.name}`,
-              categorySlug: category.slug,
-              placement: "category_page",
-            }}
-            className="w-full shrink-0 sm:w-auto"
-          />
+          <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:items-center">
+            <TrackedActionLink
+              href={whatsappUrl}
+              eventName="category_enquiry_click"
+              trackingProps={{
+                placement: "category_page_header",
+                channel: "whatsapp",
+                categorySlug: category.slug,
+                sourcePage: categoryPath,
+              }}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-full border border-textGold/60 bg-textGold/10 px-6 text-[10px] font-semibold uppercase tracking-[0.16em] text-textGold transition hover:bg-textGold hover:text-black sm:w-auto"
+            >
+              <WhatsAppIcon size={15} />
+              <span>Enquire on WhatsApp</span>
+            </TrackedActionLink>
+            <OpenQuoteButton
+              label={`Quote for ${category.name}`}
+              prefill={{
+                title: `Quote: ${category.name}`,
+                categorySlug: category.slug,
+                placement: "category_page",
+                pageUrl: categoryPath,
+              }}
+              className="w-full shrink-0 sm:w-auto"
+            />
+          </div>
         </div>
 
         {categoryProducts.length > 0 ? (
@@ -178,88 +214,146 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
               const image = product.images.find((item) => item.is_primary) ?? product.images[0];
               const fallbackItem = fallbackCategoryImages[idx % fallbackCategoryImages.length];
               const displayImage = image?.url || fallbackItem?.img;
+              const productPath = `/products/${product.slug}`;
+              const productWaHref = buildWhatsAppUrl({
+                intent: "product",
+                whatsappNumber,
+                productName: product.name,
+                productUrl: productPath,
+              });
 
               return (
-                <Link
+                <article
                   key={product.id}
-                  href={`/products/${product.slug}`}
                   className="group flex flex-col justify-between overflow-hidden rounded-xl border border-white/10 bg-[#080808] transition duration-300 hover:border-textGold/40"
                 >
-                  <div className="relative aspect-[0.91] overflow-hidden bg-[#111]">
-                    {displayImage && (
-                      <Image
-                        src={displayImage}
-                        alt={image?.alt_text || product.name}
-                        fill
-                        unoptimized={typeof displayImage === "string" && displayImage.startsWith("http")}
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                  </div>
-                  <div className="p-5">
-                    <span className="text-[9px] uppercase tracking-[0.2em] text-textGold">
-                      {product.materials.join(", ") || "Made to measure"}
-                    </span>
-                    <h3 className="mt-1 text-lg font-light text-white group-hover:text-textGold transition-colors">
-                      {product.name}
-                    </h3>
-                    {product.short_description && (
-                      <p className="mt-2 text-xs leading-5 text-white/50">
-                        {product.short_description}
-                      </p>
-                    )}
-                    <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3 text-[10px] uppercase tracking-[0.18em] text-textGold">
-                      <span>View Specifications</span>
-                      <ArrowRight size={13} />
+                  <Link href={productPath} className="block flex-1">
+                    <div className="relative aspect-[0.91] overflow-hidden bg-[#111]">
+                      {displayImage && (
+                        <Image
+                          src={displayImage}
+                          alt={image?.alt_text || product.name}
+                          fill
+                          unoptimized={typeof displayImage === "string" && displayImage.startsWith("http")}
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                     </div>
+                    <div className="p-5 pb-3">
+                      <span className="text-[9px] uppercase tracking-[0.2em] text-textGold">
+                        {product.materials.join(", ") || "Made to measure"}
+                      </span>
+                      <h3 className="mt-1 text-lg font-light text-white transition-colors group-hover:text-textGold">
+                        {product.name}
+                      </h3>
+                      {product.short_description && (
+                        <p className="mt-2 text-xs leading-5 text-white/50">
+                          {product.short_description}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+
+                  <div className="flex flex-col gap-2 border-t border-white/10 p-4 pt-3 sm:flex-row sm:items-center">
+                    <TrackedActionLink
+                      href={productWaHref}
+                      eventName="product_enquiry_click"
+                      trackingProps={{
+                        placement: "category_product_card",
+                        channel: "whatsapp",
+                        productSlug: product.slug,
+                        categorySlug: category.slug,
+                        sourcePage: categoryPath,
+                      }}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      ariaLabel={`Ask about ${product.name} on WhatsApp`}
+                      className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-textGold/60 bg-textGold/10 px-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-textGold transition hover:bg-textGold hover:text-black"
+                    >
+                      <WhatsAppIcon size={14} />
+                      <span>Ask About This Product</span>
+                    </TrackedActionLink>
+                    <Link
+                      href={productPath}
+                      className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-white/15 px-4 text-[10px] uppercase tracking-[0.14em] text-white/75 transition hover:border-textGold/50 hover:text-white"
+                    >
+                      <span>Specs</span>
+                      <ArrowRight size={12} />
+                    </Link>
                   </div>
-                </Link>
+                </article>
               );
             })}
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {fallbackCategoryImages.map((item) => (
-              <div
-                key={item.title}
-                className="group flex flex-col justify-between overflow-hidden rounded-xl border border-white/10 bg-[#080808] p-5 transition duration-300 hover:border-textGold/40"
-              >
-                <div>
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#111]">
-                    <Image
-                      src={item.img}
-                      alt={item.title}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+            {fallbackCategoryImages.map((item) => {
+              const fallbackWaHref = buildWhatsAppUrl({
+                intent: "product",
+                whatsappNumber,
+                productName: item.title,
+                productUrl: categoryPath,
+              });
+
+              return (
+                <div
+                  key={item.title}
+                  className="group flex flex-col justify-between overflow-hidden rounded-xl border border-white/10 bg-[#080808] p-5 transition duration-300 hover:border-textGold/40"
+                >
+                  <div>
+                    <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#111]">
+                      <Image
+                        src={item.img}
+                        alt={item.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                    <span className="mt-4 block text-[9px] uppercase tracking-[0.2em] text-textGold">
+                      {item.mat}
+                    </span>
+                    <h3 className="mt-1 text-base font-light text-white transition-colors group-hover:text-textGold">
+                      {item.title}
+                    </h3>
+                  </div>
+
+                  <div className="mt-6 flex flex-col gap-2 border-t border-white/10 pt-3">
+                    <TrackedActionLink
+                      href={fallbackWaHref}
+                      eventName="category_enquiry_click"
+                      trackingProps={{
+                        placement: "category_fallback_card",
+                        channel: "whatsapp",
+                        categorySlug: category.slug,
+                        sourcePage: categoryPath,
+                      }}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-textGold/60 bg-textGold/10 px-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-textGold transition hover:bg-textGold hover:text-black"
+                    >
+                      <WhatsAppIcon size={14} />
+                      <span>Enquire on WhatsApp</span>
+                    </TrackedActionLink>
+                    <OpenQuoteButton
+                      label="Request Similar Design"
+                      variant="outline"
+                      className="w-full"
+                      prefill={{
+                        title: `Quote: ${item.title}`,
+                        subtitle: `${category.name} · ${item.mat}`,
+                        productName: item.title,
+                        categorySlug: category.slug,
+                        placement: "category_card",
+                        pageUrl: categoryPath,
+                      }}
                     />
                   </div>
-                  <span className="mt-4 block text-[9px] uppercase tracking-[0.2em] text-textGold">
-                    {item.mat}
-                  </span>
-                  <h3 className="mt-1 text-base font-light text-white group-hover:text-textGold transition-colors">
-                    {item.title}
-                  </h3>
                 </div>
-
-                <div className="mt-6 border-t border-white/10 pt-3">
-                  <OpenQuoteButton
-                    label="Request Similar Design"
-                    variant="outline"
-                    className="w-full"
-                    prefill={{
-                      title: `Quote: ${item.title}`,
-                      subtitle: `${category.name} · ${item.mat}`,
-                      productName: item.title,
-                      categorySlug: category.slug,
-                      placement: "category_card",
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -273,7 +367,7 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
           categories={categories.map(({ slug: catSlug, name }) => ({ slug: catSlug, name }))}
           defaultCategory={category.slug}
           placement="category_page"
-          whatsappNumber={siteSettings.site_identity.whatsappNumber}
+          whatsappNumber={whatsappNumber}
           heading={`Get a Custom Quote for ${category.name}`}
           subheading="Tell us your required size, city, and design preference for a fast estimate."
         />
@@ -292,7 +386,7 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
             items: [
               {
                 category: "pricing",
-                question: `How do I request an estimate for ${category.name}?`,
+                question: `How is the cost estimated for ${category.name}?`,
                 answer:
                   "Submit your name, WhatsApp number, city, and approximate opening width and height in the form above, or message us directly on WhatsApp.",
               },
@@ -323,10 +417,17 @@ export default async function CategoryDetailPage({ params }: CategoryPageProps) 
         eyebrow={`Custom ${category.name}`}
         title={`${tpl.ctaTitlePrefix} ${category.name.toLowerCase()}?`}
         description={tpl.ctaDescription}
-        primaryLabel="Message On WhatsApp"
+        primaryLabel="Enquire on WhatsApp"
         primaryHref={whatsappUrl}
         secondaryLabel="Submit Specifications"
         secondaryHref={tpl.primaryCtaHref}
+        trackingEvent="category_enquiry_click"
+        trackingProps={{
+          placement: "category_bottom_cta",
+          channel: "whatsapp",
+          categorySlug: category.slug,
+          sourcePage: categoryPath,
+        }}
       />
     </main>
   );

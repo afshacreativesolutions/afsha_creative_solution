@@ -42,6 +42,17 @@ export default async function AdminLeadDetailPage({ params }: Props) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <span className="font-mono text-xs text-textGold">{lead.reference_number}</span>
+            {(lead.product_id ||
+              lead.product_slug ||
+              lead.attribution?.product_slug ||
+              lead.attribution?.enquiry_type === "product_email_quote" ||
+              lead.attribution?.enquiry_type === "product_quote") && (
+              <span className="rounded border border-textGold/40 bg-textGold/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-textGold">
+                {lead.attribution?.enquiry_type === "product_email_quote"
+                  ? "Product Quote Request · Email"
+                  : "Product Quote Request"}
+              </span>
+            )}
             <span className="text-xs text-white/30">·</span>
             <span className="text-xs text-white/55">
               Received{" "}
@@ -217,10 +228,23 @@ export default async function AdminLeadDetailPage({ params }: Props) {
                   Product Slug / Context
                 </span>
                 <span className="mt-1 block break-words">
-                  {lead.product_slug ||
+                  {(lead.product_slug ||
                     (typeof lead.attribution?.product_slug === "string"
                       ? lead.attribution.product_slug
-                      : lead.category_slug || "—")}
+                      : "")) ? (
+                    <a
+                      href={`/products/${
+                        lead.product_slug || String(lead.attribution?.product_slug)
+                      }`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-textGold underline hover:text-white"
+                    >
+                      {lead.product_slug || String(lead.attribution?.product_slug)}
+                    </a>
+                  ) : (
+                    lead.category_slug || "—"
+                  )}
                 </span>
               </div>
               <div>

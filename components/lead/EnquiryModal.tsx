@@ -33,11 +33,13 @@ export default function EnquiryModal({
 
   if (!isModalOpen) return null;
 
+  const isEmailQuote = prefill.enquiryMode === "email_quote";
+
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={prefill.title || "Get a Free Quote"}
+      aria-label={prefill.title || (isEmailQuote ? "Email for Product Quote" : "Get a Free Quote")}
       className="fixed inset-0 z-[70] flex items-end justify-center bg-black/85 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) closeEnquiryModal();
@@ -47,10 +49,11 @@ export default function EnquiryModal({
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3.5 sm:px-6">
           <div>
             <p className="text-[10px] uppercase tracking-[0.2em] text-textGold">
-              Free Consultation & Quote
+              {isEmailQuote ? "Email Quote Request" : "Free Consultation & Quote"}
             </p>
             <h2 className="mt-0.5 text-base font-light text-white sm:text-lg">
-              {prefill.title || "Request Custom Metalwork Quote"}
+              {prefill.title ||
+                (isEmailQuote ? "Email for Product Quote" : "Request Custom Metalwork Quote")}
             </h2>
           </div>
           <button
@@ -65,12 +68,17 @@ export default function EnquiryModal({
 
         <div className="overflow-y-auto p-3.5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-5">
           <LeadEnquiryForm
-            key={`${prefill.categorySlug || ""}-${prefill.productId || ""}-${prefill.productSlug || ""}-${prefill.designCode || ""}-${prefill.placement || ""}`}
+            key={`${prefill.enquiryMode || "quote"}-${prefill.categorySlug || ""}-${prefill.productId || ""}-${prefill.productSlug || ""}-${prefill.designCode || ""}-${prefill.placement || ""}`}
             categories={categories}
+            enquiryMode={prefill.enquiryMode || "quote"}
             defaultCategory={prefill.categorySlug}
+            categoryName={prefill.categoryName}
             productId={prefill.productId}
             productSlug={prefill.productSlug}
             productName={prefill.productName}
+            productDescription={prefill.productDescription}
+            productImageUrl={prefill.productImageUrl}
+            productUrl={prefill.productUrl}
             designCode={prefill.designCode}
             placement={prefill.placement || "quote_modal"}
             whatsappNumber={identity?.whatsappNumber}

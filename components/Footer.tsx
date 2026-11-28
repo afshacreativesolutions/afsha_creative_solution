@@ -7,6 +7,7 @@ import { icons } from "@/utils/images";
 import AnimatedButton from "./AnimatedButton";
 import Link from "next/link";
 import { useOptionalConsent } from "./consent/ConsentProvider";
+import TrackedActionLink from "./lead/TrackedActionLink";
 import type { CmsFooterSetting, CmsSiteIdentitySetting } from "@/lib/cms/types";
 
 const PLATFORM_ICON_SRC = {
@@ -117,6 +118,39 @@ const Footer = ({
             <div className="flex gap-3">
               {socialLinks.map((social, idx) => {
                 const maskSrc = PLATFORM_ICON_SRC[social.platform] || icons.whatsapp.src;
+                const iconEl = (
+                  <div className="group flex h-11 w-11 items-center justify-center rounded-full border border-white/10 transition duration-300 ease-in-out hover:border-textGold/30">
+                    <span
+                      aria-hidden="true"
+                      className="block h-5 w-5 bg-current text-white transition-colors duration-300 group-hover:text-textGold"
+                      style={{
+                        maskImage: `url(${maskSrc})`,
+                        WebkitMaskImage: `url(${maskSrc})`,
+                        maskRepeat: "no-repeat",
+                        WebkitMaskRepeat: "no-repeat",
+                        maskSize: "contain",
+                        WebkitMaskSize: "contain",
+                      }}
+                    />
+                  </div>
+                );
+
+                if (social.platform === "whatsapp" || social.href.includes("wa.me")) {
+                  return (
+                    <TrackedActionLink
+                      key={`${social.platform}-${idx}`}
+                      href={social.href}
+                      eventName="whatsapp_click"
+                      trackingProps={{ placement: "footer_social", channel: "whatsapp" }}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      ariaLabel={social.label}
+                    >
+                      {iconEl}
+                    </TrackedActionLink>
+                  );
+                }
+
                 return (
                   <Link
                     key={`${social.platform}-${idx}`}
@@ -125,20 +159,7 @@ const Footer = ({
                     rel="noopener noreferrer"
                     aria-label={social.label}
                   >
-                    <div className="group w-fit rounded-full border border-white/10 p-2 transition duration-300 ease-in-out hover:border-textGold/30">
-                      <span
-                        aria-hidden="true"
-                        className="block h-5 w-5 bg-current text-white transition-colors duration-300 group-hover:text-textGold"
-                        style={{
-                          maskImage: `url(${maskSrc})`,
-                          WebkitMaskImage: `url(${maskSrc})`,
-                          maskRepeat: "no-repeat",
-                          WebkitMaskRepeat: "no-repeat",
-                          maskSize: "contain",
-                          WebkitMaskSize: "contain",
-                        }}
-                      />
-                    </div>
+                    {iconEl}
                   </Link>
                 );
               })}

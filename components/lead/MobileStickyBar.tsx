@@ -4,24 +4,45 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { FileText, MessageCircle, Phone, X } from "lucide-react";
 import { useOptionalConsent } from "@/components/consent/ConsentProvider";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { useOptionalMenu } from "@/context/menuContext";
 import type { CmsSiteIdentitySetting } from "@/lib/cms/types";
-import { trackEvent } from "@/lib/tracker";
+import { trackEvent, type AllowedEventName } from "@/lib/tracker";
+import { buildWhatsAppUrl, type WhatsAppEnquiryIntent } from "@/lib/whatsapp";
 import { useEnquiry } from "./EnquiryContext";
 
+function toTitleLabel(slug: string): string {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 function deriveContextFromPath(pathname: string): {
+  intent: WhatsAppEnquiryIntent;
+  eventName: AllowedEventName;
   categorySlug?: string;
+  productSlug?: string;
   label: string;
 } {
   if (pathname.startsWith("/categories/")) {
     const slug = pathname.replace("/categories/", "").split("/")[0];
-    const cleanName = slug.replace(/-/g, " ");
-    return { categorySlug: slug, label: cleanName };
+    const label = toTitleLabel(slug);
+    return {
+      intent: "category",
+      eventName: "category_enquiry_click",
+      categorySlug: slug,
+      label,
+    };
   }
   if (pathname.startsWith("/products/")) {
     const slug = pathname.replace("/products/", "").split("/")[0];
-    const cleanName = slug.replace(/-/g, " ");
+    const label = toTitleLabel(slug);
     return {
+      intent: "product",
+      eventName: "product_whatsapp_click",
+      productSlug: slug,
       categorySlug: slug.includes("gate")
         ? "gates"
         : slug.includes("balcony")
@@ -31,19 +52,38 @@ function deriveContextFromPath(pathname: string): {
             : slug.includes("railing") || slug.includes("stair")
               ? "stair-railings"
               : "custom-metalwork",
-      label: cleanName,
+      label,
     };
   }
   if (pathname.includes("iron-railing")) {
-    return { categorySlug: "stair-railings", label: "iron railings" };
+    return {
+      intent: "category",
+      eventName: "category_enquiry_click",
+      categorySlug: "stair-railings",
+      label: "Iron Railings",
+    };
   }
   if (pathname.includes("metal-gate")) {
-    return { categorySlug: "gates", label: "metal gates" };
+    return {
+      intent: "category",
+      eventName: "category_enquiry_click",
+      categorySlug: "gates",
+      label: "Metal Gates",
+    };
   }
   if (pathname.startsWith("/gallery")) {
-    return { categorySlug: "custom-metalwork", label: "a custom project from your gallery" };
+    return {
+      intent: "gallery",
+      eventName: "gallery_enquiry_click",
+      categorySlug: "custom-metalwork",
+      label: "Featured Metalwork",
+    };
   }
-  return { label: "custom gates, railings, or metal fabrication" };
+  return {
+    intent: "general",
+    eventName: "whatsapp_click",
+    label: "custom gates, railings, or metal fabrication",
+  };
 }
 
 export default function MobileStickyBar({
@@ -66,6 +106,7 @@ export default function MobileStickyBar({
 
   // Close speed dial when route changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setExpanded(false);
   }, [pathname]);
 
@@ -139,12 +180,34 @@ export default function MobileStickyBar({
     isMenuOpen;
 
   const phoneHref = identity?.phoneHref || "tel:+919634776691";
-  const waNumber = (identity?.whatsappNumber || "919634776691").replace(/\D/g, "");
   const routeCtx = deriveContextFromPath(pathname);
-  const waText = `Hello ${
-    identity?.siteLegalName || "Afsha Creative Solution"
-  }, I am browsing your website (${pathname}) and would like a free quote for ${routeCtx.label}.`;
-  const waHref = `https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`;
+
+  const waHref =
+    routeCtx.intent === "product"
+      ? buildWhatsAppUrl({
+          intent: "product",
+          whatsappNumber: identity?.whatsappNumber,
+          productName: routeCtx.label,
+          productUrl: pathname,
+        })
+      : routeCtx.intent === "category"
+        ? buildWhatsAppUrl({
+            intent: "category",
+            whatsappNumber: identity?.whatsappNumber,
+            categoryName: routeCtx.label,
+            categoryUrl: pathname,
+          })
+        : routeCtx.intent === "gallery"
+          ? buildWhatsAppUrl({
+              intent: "gallery",
+              whatsappNumber: identity?.whatsappNumber,
+              projectName: routeCtx.label,
+              projectUrl: pathname,
+            })
+          : buildWhatsAppUrl({
+              intent: "general",
+              whatsappNumber: identity?.whatsappNumber,
+            });
 
   return (
     <>
@@ -196,10 +259,13 @@ export default function MobileStickyBar({
                 void trackEvent("quote_cta_click", {
                   placement: "mobile_fab",
                   categorySlug: routeCtx.categorySlug || "general",
+                  productSlug: routeCtx.productSlug || null,
+                  sourcePage: pathname,
                 });
                 openEnquiryModal({
                   title: "Get a Free Metalwork Quote",
                   categorySlug: routeCtx.categorySlug,
+                  productSlug: routeCtx.productSlug,
                   placement: "mobile_fab",
                   pageUrl: pathname,
                 });
@@ -214,9 +280,9 @@ export default function MobileStickyBar({
           <div className="flex items-center gap-2.5">
             <span
               id="fab-whatsapp-label"
-              className="rounded-full border border-emerald-500/40 bg-black/90 px-3 py-1.5 text-xs font-medium tracking-wide text-emerald-300 shadow-xl whitespace-nowrap"
+              className="rounded-full border border-textGold/40 bg-black/90 px-3 py-1.5 text-xs font-medium tracking-wide text-textGold shadow-xl whitespace-nowrap"
             >
-              Chat on WhatsApp
+              Enquire on WhatsApp
             </span>
             <a
               href={waHref}
@@ -227,14 +293,17 @@ export default function MobileStickyBar({
               tabIndex={expanded ? 0 : -1}
               onClick={() => {
                 setExpanded(false);
-                void trackEvent("whatsapp_click", {
-                  placement: "mobile_fab",
+                void trackEvent(routeCtx.eventName, {
+                  placement: "mobile_sticky_cta",
+                  channel: "whatsapp",
                   categorySlug: routeCtx.categorySlug || "general",
+                  productSlug: routeCtx.productSlug || null,
+                  sourcePage: pathname,
                 });
               }}
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-emerald-400 bg-emerald-500 text-white shadow-xl transition-transform hover:scale-105 active:scale-95"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-textGold/60 bg-[#0d0d0d] text-textGold shadow-xl transition-transform hover:scale-105 active:scale-95"
             >
-              <MessageCircle size={22} className="shrink-0" />
+              <WhatsAppIcon size={22} />
             </a>
           </div>
 
@@ -256,6 +325,7 @@ export default function MobileStickyBar({
                 void trackEvent("phone_click", {
                   placement: "mobile_fab",
                   categorySlug: routeCtx.categorySlug || "general",
+                  sourcePage: pathname,
                 });
               }}
               className="flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-[#151515] text-textGold shadow-xl transition-transform hover:border-textGold hover:scale-105 active:scale-95"

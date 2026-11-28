@@ -1,12 +1,12 @@
 /**
  * Centralized Production Site Configuration
  * Afsha Creative Solution — Moradabad, Uttar Pradesh, India
- * 
+ *
  * CRITICAL RULE:
  * Public customer-facing links, WhatsApp share messages, Open Graph URLs,
  * canonical tags, and structured data MUST ALWAYS use the official production domain:
  * https://www.afshacreative.in
- * 
+ *
  * Never generate public links using Vercel deployment URLs (*.vercel.app).
  */
 
@@ -34,7 +34,6 @@ export const BUSINESS_ADDRESS = {
  * Strips any trailing slash to ensure uniform URL concatenation.
  */
 export function getSiteUrl(): string {
-  // If explicitly configured in environment, use it; otherwise fallback to the official www domain.
   const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (envUrl && !envUrl.includes("vercel.app")) {
     return envUrl.replace(/\/+$/, "");
@@ -49,7 +48,6 @@ export function getSiteUrl(): string {
 export function absoluteUrl(path: string = "/"): string {
   const base = getSiteUrl();
 
-  // If path is already a full absolute URL, ensure it uses the official domain if it was a vercel or apex link
   if (/^https?:\/\//i.test(path)) {
     try {
       const parsed = new URL(path);
@@ -63,7 +61,6 @@ export function absoluteUrl(path: string = "/"): string {
   }
 
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  // Normalize double slashes
   const normalized = cleanPath.replace(/\/+/g, "/");
   return `${base}${normalized === "/" ? "" : normalized}`;
 }
@@ -84,27 +81,40 @@ export function canonicalUrl(path: string = "/"): string {
 
 /**
  * Builds a standardized WhatsApp Get a Quote URL.
- * Never includes Vercel deployment URLs.
+ * Kept self-contained for zero-import compatibility with Node test scripts;
+ * UI components should use lib/whatsapp.ts directly.
  */
 export function buildWhatsAppQuoteUrl(params: {
   productName: string;
   designCode?: string;
   sharePath?: string;
   customMessage?: string;
+  whatsappNumber?: string | null;
 }): string {
-  const { productName, designCode, sharePath, customMessage } = params;
+  const { productName, designCode, sharePath, customMessage, whatsappNumber } = params;
 
-  let text = customMessage || `Hello Afsha Creative Solution,\n\nI would like to request a quote for ${productName}.`;
+  const digits = (whatsappNumber || "").replace(/\D/g, "");
+  const target = digits.length === 10 ? `91${digits}` : digits || BUSINESS_WHATSAPP_NUMBER;
 
-  if (designCode) {
-    text += `\nDesign ID: ${designCode}`;
+  let text =
+    customMessage?.trim() ||
+    [
+      "Hello Afsha Creative Solutions!",
+      `I'm interested in your ${productName}.`,
+      "Could you please share:\n\n1. Available designs and customization options.\n2. Estimated pricing.\n3. Manufacturing and installation time.",
+    ].join("\n\n");
+
+  if (!customMessage && designCode) {
+    text += `\n\nDesign ID: ${designCode}`;
   }
 
-  if (sharePath) {
-    const fullUrl = absoluteUrl(sharePath);
-    text += `\nDesign link: ${fullUrl}`;
+  if (!customMessage && sharePath) {
+    text += `\n\nProduct details:\n${canonicalUrl(sharePath)}`;
   }
 
-  const encoded = encodeURIComponent(text.trim());
-  return `https://wa.me/${BUSINESS_WHATSAPP_NUMBER}?text=${encoded}`;
+  if (!customMessage) {
+    text += "\n\nPlease contact me with more details.\n\nThank you!";
+  }
+
+  return `https://wa.me/${target}?text=${encodeURIComponent(text.trim())}`;
 }

@@ -4,6 +4,8 @@ export type LeadFieldErrors = Partial<
   Record<"name" | "phone" | "category" | "city" | "email" | "message" | "photo", string>
 >;
 
+export type LeadEnquiryType = "general_quote" | "product_quote" | "product_email_quote";
+
 export type ParsedLeadPayload = {
   name: string;
   phone: string;
@@ -14,6 +16,7 @@ export type ParsedLeadPayload = {
   dimensions: string;
   material: string;
   message: string;
+  enquiryType: LeadEnquiryType;
   productId: string;
   productSlug: string;
   productName: string;
@@ -41,6 +44,13 @@ export function normalizePhoneDigits(phone: string): string {
   return phone.replace(/\D/g, "");
 }
 
+function parseEnquiryType(raw: unknown, hasProduct: boolean): LeadEnquiryType {
+  const value = sanitizeText(raw, 40);
+  if (value === "product_email_quote") return "product_email_quote";
+  if (value === "product_quote" || hasProduct) return "product_quote";
+  return "general_quote";
+}
+
 export function validateLeadFields(input: Record<string, unknown>, requireCity = true): {
   valid: boolean;
   errors: LeadFieldErrors;
@@ -52,17 +62,23 @@ export function validateLeadFields(input: Record<string, unknown>, requireCity =
   const phone = sanitizeText(input.phone, 25);
   const normalizedPhoneDigits = normalizePhoneDigits(phone);
   const email = sanitizeText(input.email, 254);
-  const category = sanitizeText(input.category, 100);
+  const productId = sanitizeText(input.productId, 64);
+  const productSlug = sanitizeText(input.productSlug, 160);
+  const productName = sanitizeText(input.productName, 160);
+  const enquiryType = parseEnquiryType(
+    input.enquiryType,
+    Boolean(productId || productSlug || productName)
+  );
+  const isEmailQuote = enquiryType === "product_email_quote";
+
+  const category = sanitizeText(input.category, 100) || (isEmailQuote ? "custom-metalwork" : "");
   const hasCityField = Object.prototype.hasOwnProperty.call(input, "city");
   const cityRaw = sanitizeText(input.city, 120);
-  const city = cityRaw || (!requireCity && !hasCityField ? "Moradabad" : "");
+  const city = cityRaw || (!requireCity && !hasCityField && !isEmailQuote ? "Moradabad" : "");
 
   const dimensions = sanitizeText(input.dimensions, 200);
   const material = sanitizeText(input.material, 100);
   const message = sanitizeRichText(input.message, 4000);
-  const productId = sanitizeText(input.productId, 64);
-  const productSlug = sanitizeText(input.productSlug, 160);
-  const productName = sanitizeText(input.productName, 160);
   const designCode = sanitizeText(input.designCode, 64);
   const pageUrl = sanitizeText(input.pageUrl, 400);
   const placement = sanitizeText(input.placement, 60) || "website";
@@ -89,12 +105,16 @@ export function validateLeadFields(input: Record<string, unknown>, requireCity =
     errors.category = "Please select the product or fabrication service.";
   }
 
-  if ((requireCity || hasCityField) && city.length < 2) {
+  if (!isEmailQuote && (requireCity || hasCityField) && city.length < 2) {
     errors.city = "Please enter your city or site location.";
   }
 
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errors.email = "Please enter a valid email address or leave this field blank.";
+  if (isEmailQuote && !email) {
+    errors.email = "Please enter your email address so we can send your quote.";
+  } else if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = isEmailQuote
+      ? "Please enter a valid email address."
+      : "Please enter a valid email address or leave this field blank.";
   }
 
   return {
@@ -110,6 +130,7 @@ export function validateLeadFields(input: Record<string, unknown>, requireCity =
       dimensions,
       material,
       message,
+      enquiryType,
       productId,
       productSlug,
       productName,

@@ -1,7 +1,9 @@
 import { ImageResponse } from "next/og";
 import { getPublicProduct } from "@/lib/catalog";
+import { resolveOgPhotoDataUri } from "@/lib/og-image-loader";
 
 export const runtime = "nodejs";
+export const revalidate = 300;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -28,7 +30,7 @@ export default async function DesignOpenGraphImage({ params }: Props) {
             fontSize: "24px",
           }}
         >
-          Afsha Creative Solution — Design Reference
+          Afsha Creative Solutions — Design Reference
         </div>
       ),
       { ...size }
@@ -39,7 +41,11 @@ export default async function DesignOpenGraphImage({ params }: Props) {
   const index = product.images.findIndex((i) => i.id === imageId);
   const prefix = product.slug.split("-").map((part) => part[0]).join("").slice(0, 5).toUpperCase();
   const designCode = `${prefix}-${String(Math.max(0, index) + 1).padStart(2, "0")}`;
-  const imageUrl = image?.url;
+  const fallbackUrls = product.images.map((i) => i.url);
+  const photoDataUri = await resolveOgPhotoDataUri(
+    [image?.url, ...fallbackUrls],
+    product.category?.slug
+  );
 
   return new ImageResponse(
     (
@@ -88,7 +94,7 @@ export default async function DesignOpenGraphImage({ params }: Props) {
                 AFSHA
               </span>
               <span style={{ fontSize: "9px", letterSpacing: "0.25em", color: "#A7A7A7" }}>
-                CREATIVE SOLUTION
+                CREATIVE SOLUTIONS
               </span>
             </div>
           </div>
@@ -155,7 +161,7 @@ export default async function DesignOpenGraphImage({ params }: Props) {
                 textTransform: "uppercase",
               }}
             >
-              Quote on WhatsApp: +91 9634776691
+              Enquire on WhatsApp
             </span>
           </div>
         </div>
@@ -174,10 +180,10 @@ export default async function DesignOpenGraphImage({ params }: Props) {
             overflow: "hidden",
           }}
         >
-          {imageUrl ? (
+          {photoDataUri ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={imageUrl}
+              src={photoDataUri}
               alt={`${product.name} ${designCode}`}
               style={{
                 width: "100%",

@@ -15,7 +15,8 @@
     "test:cms": "node scripts/test-cms-system.mjs",
     "test:leads": "node scripts/test-lead-capture.mjs",
     "test:admin": "node scripts/test-admin-ux.mjs",
-    "test:seo": "node scripts/test-og-and-seo.mjs"
+    "test:seo": "node scripts/test-og-and-seo.mjs",
+    "test:whatsapp": "node scripts/test-whatsapp-and-og.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

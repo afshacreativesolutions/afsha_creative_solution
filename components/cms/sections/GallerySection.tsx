@@ -8,9 +8,11 @@ import type { GallerySectionContent } from "@/lib/cms/types";
 export default function GallerySection({
   content,
   products = [],
+  whatsappNumber,
 }: {
   content: GallerySectionContent;
   products?: ProductRecord[];
+  whatsappNumber?: string;
 }) {
   const cmsItems: GalleryItem[] = (content.items ?? []).map((item) => ({
     id: item.id,
@@ -42,6 +44,7 @@ export default function GallerySection({
               title: product.name,
               category: product.category?.name || "Architectural Metalwork",
               categorySlug,
+              productSlug: product.slug,
               material: product.materials.join(", ") || "Made to Measure",
               description: product.short_description || product.description,
               image: primaryImage.url || images.steel_gate.ssGate13,
@@ -80,11 +83,16 @@ export default function GallerySection({
         </div>
       )}
 
-      <GalleryLightbox items={allGalleryItems} categories={content.filterCategories} />
+      <GalleryLightbox
+        items={allGalleryItems}
+        categories={content.filterCategories}
+        whatsappNumber={whatsappNumber}
+      />
 
       <div id="gallery-enquiry" className="mt-14 scroll-mt-20 border-t border-white/10 pt-12">
         <LeadEnquiryForm
           placement="gallery_page"
+          whatsappNumber={whatsappNumber}
           heading="Want a Similar Custom Gate or Railing?"
           subheading="Select your preferred category, share your site city, and optionally attach a photo or sketch."
         />

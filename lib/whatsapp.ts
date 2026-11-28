@@ -1,147 +1,219 @@
-import { createSupabaseServiceClient } from "./supabase/service";
+import { BUSINESS_WHATSAPP_NUMBER, canonicalUrl } from "./site-config";
 
-export type SendWhatsAppMessageParams = {
-  toPhone: string; // e.g. "919634776691"
-  templateName?: string;
-  templateLanguage?: string;
-  templateComponents?: unknown[];
-  textMessage?: string;
-  leadId?: string;
-  customerId?: string;
-  messageType?: "transactional" | "marketing" | "notification";
+export type WhatsAppEnquiryIntent = "general" | "product" | "category" | "gallery";
+
+export type WhatsAppEnquiryContext = {
+  /** Verified business WhatsApp number from CMS site settings (falls back to BUSINESS_WHATSAPP_NUMBER). */
+  whatsappNumber?: string | null;
+  /** Product context */
+  productName?: string | null;
+  productUrl?: string | null;
+  designCode?: string | null;
+  /** Category context */
+  categoryName?: string | null;
+  categoryUrl?: string | null;
+  /** Gallery / project context */
+  projectName?: string | null;
+  projectUrl?: string | null;
+  /** Optional non-PII project location (only included when explicitly supplied by user) */
+  customerLocation?: string | null;
+  /** Optional safe enquiry details (e.g., reference ID or dimensions) */
+  enquiryDetails?: string | null;
+  /** Optional custom greeting override for general enquiries */
+  customMessage?: string | null;
 };
 
-/**
- * Sends a message via Meta WhatsApp Business Cloud API (Graph API v21.0).
- * Handles phone normalization (strips +, spaces, dashes), logs status in public.message_logs.
- */
-export async function sendWhatsAppMessage({
-  toPhone,
-  templateName,
-  templateLanguage = "en",
-  templateComponents,
-  textMessage,
-  leadId,
-  customerId,
-  messageType = "transactional",
-}: SendWhatsAppMessageParams): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
-
-  // Clean phone number: remove non-digits
-  const cleanPhone = toPhone.replace(/\D/g, "");
-  // Prepend India country code 91 if 10 digits
-  const normalizedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-
-  if (!phoneNumberId || !accessToken) {
-    console.warn("sendWhatsAppMessage: WHATSAPP_PHONE_NUMBER_ID or WHATSAPP_ACCESS_TOKEN is missing.");
-    return { success: false, error: "WhatsApp Cloud API credentials not configured." };
-  }
-
-  const endpoint = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
-
-  const payload: Record<string, unknown> = {
-    messaging_product: "whatsapp",
-    recipient_type: "individual",
-    to: normalizedPhone,
-  };
-
-  if (templateName) {
-    payload.type = "template";
-    payload.template = {
-      name: templateName,
-      language: { code: templateLanguage },
-      components: templateComponents || [],
-    };
-  } else if (textMessage) {
-    payload.type = "text";
-    payload.text = { preview_url: false, body: textMessage };
-  } else {
-    return { success: false, error: "Either templateName or textMessage must be supplied." };
-  }
-
-  try {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      const errorMsg = data?.error?.message || "Failed to deliver WhatsApp message";
-      await logWhatsAppMessage({
-        leadId,
-        customerId,
-        recipient: normalizedPhone,
-        templateName,
-        messageType,
-        status: "failed",
-        errorMessage: errorMsg,
-      });
-      return { success: false, error: errorMsg };
+export type BuildWhatsAppUrlInput =
+  | {
+      message: string;
+      whatsappNumber?: string | null;
     }
+  | ({
+      intent?: WhatsAppEnquiryIntent;
+      message?: string;
+    } & WhatsAppEnquiryContext);
 
-    const messageId = data?.messages?.[0]?.id;
-    await logWhatsAppMessage({
-      leadId,
-      customerId,
-      recipient: normalizedPhone,
-      templateName,
-      messageType,
-      status: "sent",
-      providerMessageId: messageId,
-    });
+function cleanField(value?: string | null): string {
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  const lower = trimmed.toLowerCase();
+  if (lower === "undefined" || lower === "null") return "";
+  return trimmed;
+}
 
-    return { success: true, messageId };
-  } catch (err) {
-    const errorMsg = err instanceof Error ? err.message : "WhatsApp delivery exception";
-    console.error("sendWhatsAppMessage exception:", err);
-    await logWhatsAppMessage({
-      leadId,
-      customerId,
-      recipient: normalizedPhone,
-      templateName,
-      messageType,
-      status: "failed",
-      errorMessage: errorMsg,
-    });
-    return { success: false, error: errorMsg };
+function resolveShareUrl(rawUrl?: string | null): string {
+  const cleaned = cleanField(rawUrl);
+  if (!cleaned) return "";
+  return canonicalUrl(cleaned);
+}
+
+function appendOptionalDetails(
+  sections: string[],
+  context?: Pick<WhatsAppEnquiryContext, "customerLocation" | "enquiryDetails">
+) {
+  const location = cleanField(context?.customerLocation);
+  const details = cleanField(context?.enquiryDetails);
+  if (location) {
+    sections.push(`Project location: ${location}`);
+  }
+  if (details) {
+    sections.push(`Enquiry details: ${details}`);
   }
 }
 
-async function logWhatsAppMessage(params: {
-  leadId?: string;
-  customerId?: string;
-  recipient: string;
-  templateName?: string;
-  messageType: "transactional" | "marketing" | "notification";
-  status: "sent" | "failed";
-  providerMessageId?: string;
-  errorMessage?: string;
-}) {
-  try {
-    const supabase = createSupabaseServiceClient();
-    if (!supabase) return;
+/**
+ * Normalizes a business WhatsApp phone number to digits-only format with country code.
+ */
+export function normalizeWhatsAppNumber(rawNumber?: string | null): string {
+  const digits = cleanField(rawNumber).replace(/\D/g, "");
+  if (!digits) return BUSINESS_WHATSAPP_NUMBER;
+  if (digits.length === 10) return `91${digits}`;
+  return digits;
+}
 
-    await supabase.from("message_logs").insert({
-      lead_id: params.leadId || null,
-      customer_id: params.customerId || null,
-      channel: "whatsapp",
-      provider: "meta_whatsapp",
-      recipient: params.recipient,
-      direction: "outbound",
-      message_type: params.messageType,
-      template_name: params.templateName || null,
-      status: params.status,
-      provider_message_id: params.providerMessageId || null,
-      error_message: params.errorMessage || null,
-    });
-  } catch (err) {
-    console.warn("Failed to insert message_log for WhatsApp:", err);
+/**
+ * Builds a professional general metal fabrication enquiry message.
+ */
+export function buildGeneralWhatsAppMessage(
+  context: Pick<
+    WhatsAppEnquiryContext,
+    "customerLocation" | "enquiryDetails" | "customMessage"
+  > = {}
+): string {
+  const custom = cleanField(context.customMessage);
+  if (custom) {
+    const sections = [custom];
+    appendOptionalDetails(sections, context);
+    return sections.join("\n\n");
   }
+
+  const sections = [
+    "Hello Afsha Creative Solutions!",
+    "I'd like to know more about your metal fabrication services.",
+    "Could you please share your available services and estimated pricing?",
+  ];
+
+  appendOptionalDetails(sections, context);
+  sections.push("Thank you!");
+  return sections.join("\n\n");
+}
+
+/**
+ * Builds a product-specific WhatsApp enquiry message with canonical product URL for rich OG previews.
+ */
+export function buildProductWhatsAppMessage(
+  context: Pick<
+    WhatsAppEnquiryContext,
+    "productName" | "productUrl" | "designCode" | "customerLocation" | "enquiryDetails"
+  >
+): string {
+  const productName = cleanField(context.productName) || "custom metalwork product";
+  const productUrl = resolveShareUrl(context.productUrl);
+  const designCode = cleanField(context.designCode);
+
+  const sections = [
+    "Hello Afsha Creative Solutions!",
+    `I'm interested in your ${productName}.`,
+    [
+      "Could you please share:",
+      "",
+      "1. Available designs and customization options.",
+      "2. Estimated pricing.",
+      "3. Manufacturing and installation time.",
+    ].join("\n"),
+  ];
+
+  if (designCode) {
+    sections.push(`Design ID: ${designCode}`);
+  }
+
+  if (productUrl) {
+    sections.push(`Product details:\n${productUrl}`);
+  }
+
+  appendOptionalDetails(sections, context);
+  sections.push("Please contact me with more details.");
+  sections.push("Thank you!");
+  return sections.join("\n\n");
+}
+
+/**
+ * Builds a category-specific WhatsApp enquiry message with canonical category URL.
+ */
+export function buildCategoryWhatsAppMessage(
+  context: Pick<
+    WhatsAppEnquiryContext,
+    "categoryName" | "categoryUrl" | "customerLocation" | "enquiryDetails"
+  >
+): string {
+  const categoryName = cleanField(context.categoryName) || "metalwork";
+  const categoryUrl = resolveShareUrl(context.categoryUrl);
+
+  const sections = [
+    "Hello Afsha Creative Solutions!",
+    `I'm interested in your ${categoryName} collection.`,
+    "Please share available designs, customization options and pricing.",
+  ];
+
+  if (categoryUrl) {
+    sections.push(`Category: ${categoryUrl}`);
+  }
+
+  appendOptionalDetails(sections, context);
+  sections.push("Thank you!");
+  return sections.join("\n\n");
+}
+
+/**
+ * Builds a gallery/project-specific WhatsApp enquiry message with canonical project URL.
+ */
+export function buildGalleryWhatsAppMessage(
+  context: Pick<
+    WhatsAppEnquiryContext,
+    "projectName" | "projectUrl" | "customerLocation" | "enquiryDetails"
+  >
+): string {
+  const projectName = cleanField(context.projectName) || "custom metalwork";
+  const projectUrl = resolveShareUrl(context.projectUrl);
+
+  const sections = [
+    "Hello Afsha Creative Solutions!",
+    `I saw your ${projectName} project and would like something similar.`,
+    "Could you please discuss the design, customization and estimated cost?",
+  ];
+
+  if (projectUrl) {
+    sections.push(`Project: ${projectUrl}`);
+  }
+
+  appendOptionalDetails(sections, context);
+  sections.push("Thank you!");
+  return sections.join("\n\n");
+}
+
+/**
+ * Generates a properly URL-encoded WhatsApp click-to-chat URL using verified business settings.
+ */
+export function buildWhatsAppUrl(input: BuildWhatsAppUrlInput = {}): string {
+  const targetNumber = normalizeWhatsAppNumber(input.whatsappNumber);
+
+  let text = cleanField(input.message);
+  if (!text) {
+    const ctx = input as {
+      intent?: WhatsAppEnquiryIntent;
+    } & WhatsAppEnquiryContext;
+
+    if (ctx.intent === "product" || (!ctx.intent && cleanField(ctx.productName))) {
+      text = buildProductWhatsAppMessage(ctx);
+    } else if (ctx.intent === "gallery" || (!ctx.intent && cleanField(ctx.projectName))) {
+      text = buildGalleryWhatsAppMessage(ctx);
+    } else if (ctx.intent === "category" || (!ctx.intent && cleanField(ctx.categoryName))) {
+      text = buildCategoryWhatsAppMessage(ctx);
+    } else {
+      text = buildGeneralWhatsAppMessage(ctx);
+    }
+  }
+
+  return `https://wa.me/${targetNumber}?text=${encodeURIComponent(text)}`;
 }

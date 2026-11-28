@@ -55,6 +55,7 @@ export default function CMSSectionRenderer({
         <GallerySection
           content={section.content as never}
           products={context?.products}
+          whatsappNumber={context?.whatsappNumber}
         />
       );
     case "testimonials":

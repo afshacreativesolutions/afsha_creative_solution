@@ -1,57 +1,382 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="dark">
-    <title>New project enquiry</title>
+    <meta content="width=device-width" name="viewport" />
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta content="telephone=no,address=no,email=no,date=no,url=no" name="format-detection" />
+    <title>A website enquiry from {{{CUSTOMER_NAME}}} about {{{CATEGORY}}}.</title>
+    <style>
+      @media (prefers-color-scheme: dark){li::marker{color:#c4c4c4}}
+    </style>
     <style>
       @media screen and (max-width: 600px) {
-        .email-shell { width: 100% !important; }
-        .email-padding { padding-left: 20px !important; padding-right: 20px !important; }
-        .field-cell { display: block !important; width: 100% !important; padding: 0 0 16px !important; }
-        .message-cell { padding: 18px !important; }
-      }
+              .email-shell { width: 100% !important; }
+              .email-padding { padding-left: 20px !important; padding-right: 20px !important; }
+              .field-cell { display: block !important; width: 100% !important; padding: 0 0 16px !important; }
+              .message-cell { padding: 18px !important; }
+            }
     </style>
   </head>
-  <body style="margin:0;background:#090909;color:#f5f1e9;font-family:Arial,Helvetica,sans-serif;">
-    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">New project enquiry from {{{CUSTOMER_NAME}}} about {{{CATEGORY}}}.</div>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#090909;">
-      <tr><td align="center" style="padding:30px 12px;">
-        <table role="presentation" class="email-shell" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px;max-width:600px;border:1px solid #30291f;background:#11100e;">
-          <tr><td class="email-padding" style="padding:30px 38px 26px;border-bottom:1px solid #30291f;">
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr>
-              <td valign="middle"><div style="font-size:12px;font-weight:bold;letter-spacing:3px;color:#e1bd8d;">AFSHA CREATIVE SOLUTION</div><div style="padding-top:7px;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#99938a;">Made to measure · Moradabad, India</div></td>
-              <td align="right" valign="middle" style="font-size:9px;letter-spacing:1.8px;color:#8c8479;">WEBSITE ENQUIRY</td>
-            </tr></table>
-          </td></tr>
-          <tr><td class="email-padding" style="padding:32px 38px 22px;">
-            <div style="font-size:9px;font-weight:bold;letter-spacing:2.5px;color:#c99f6c;text-transform:uppercase;">New project enquiry</div>
-            <h1 style="margin:12px 0 0;font-size:28px;font-weight:400;line-height:1.25;color:#f5f1e9;">{{{CATEGORY}}}</h1>
-            <p style="margin:10px 0 0;font-size:13px;line-height:1.7;color:#aaa39a;">A new request has been submitted through the contact form. Reference <span style="color:#e1bd8d;">{{{ENQUIRY_REFERENCE}}}</span></p>
-          </td></tr>
-          <tr><td class="email-padding" style="padding:8px 38px 12px;">
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-top:1px solid #30291f;border-left:1px solid #30291f;">
-              <tr>
-                <td class="field-cell" width="50%" style="padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f;"><div style="font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80;">Customer</div><div style="padding-top:8px;font-size:14px;line-height:1.5;color:#f5f1e9;">{{{CUSTOMER_NAME}}}</div></td>
-                <td class="field-cell" width="50%" style="padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f;"><div style="font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80;">Phone</div><div style="padding-top:8px;font-size:14px;line-height:1.5;color:#f5f1e9;">{{{CUSTOMER_PHONE}}}</div></td>
-              </tr>
-              <tr>
-                <td class="field-cell" width="50%" style="padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f;"><div style="font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80;">Email address</div><div style="padding-top:8px;font-size:14px;line-height:1.5;word-break:break-word;color:#e1bd8d;">{{{CUSTOMER_EMAIL}}}</div></td>
-                <td class="field-cell" width="50%" style="padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f;"><div style="font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80;">Submitted</div><div style="padding-top:8px;font-size:14px;line-height:1.5;color:#f5f1e9;">{{{SUBMITTED_AT}}}</div></td>
-              </tr>
+  <body
+    dir="ltr"
+    lang="en"
+    style="background-color:#090909;margin:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:0"
+  >
+    <table border="0" width="100%" cellpadding="0" cellspacing="0" role="presentation" align="center">
+      <tbody>
+        <tr>
+          <td
+            dir="ltr"
+            lang="en"
+            style="background-color:#090909;margin:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px"
+          >
+            <table
+              align="left"
+              width="100%"
+              border="0"
+              cellpadding="0"
+              cellspacing="0"
+              role="presentation"
+              style="max-width:600px;align:left;width:100%;color:#f5f1e9;background-color:#11100e;border-radius:0px"
+            >
+              <tbody>
+                <tr style="width:100%">
+                  <td style="padding-top:0px;padding-right:0px;padding-bottom:0px;padding-left:0px">
+                    <div
+                      style="margin:0;padding:0;display:none;max-height:0;overflow:hidden;opacity:0;color:transparent"
+                    >
+                      <p style="margin:0;padding:0">
+                        New project enquiry from
+                        <!-- -->{{{CUSTOMER_NAME}}}<!-- -->
+                        about
+                        <!-- -->{{{CATEGORY}}}<!-- -->.
+                      </p>
+                    </div>
+                    <table
+                      width="100%"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                      role="presentation"
+                      style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;padding-top:0;padding-right:0;padding-bottom:0;padding-left:0;background:#090909"
+                    >
+                      <tbody>
+                        <tr style="margin:0;padding:0">
+                          <td align="center" data-id="__react-email-column" style="margin:0;padding:30px 12px">
+                            <table
+                              width="600"
+                              border="0"
+                              cellpadding="0"
+                              cellspacing="0"
+                              role="presentation"
+                              class="email-shell"
+                              style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;padding-top:0;padding-right:0;padding-bottom:0;padding-left:0;width:600px;max-width:600px;border-style:solid;border-width:1px;border-color:#30291f;background:#11100e"
+                            >
+                              <tbody>
+                                <tr style="margin:0;padding:0">
+                                  <td
+                                    class="email-padding"
+                                    data-id="__react-email-column"
+                                    style="margin:0;padding:30px 38px 26px;border-bottom:1px solid #30291f"
+                                  >
+                                    <table
+                                      width="100%"
+                                      border="0"
+                                      cellpadding="0"
+                                      cellspacing="0"
+                                      role="presentation"
+                                      style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;padding-top:0;padding-right:0;padding-bottom:0;padding-left:0"
+                                    >
+                                      <tbody>
+                                        <tr style="margin:0;padding:0">
+                                          <td data-id="__react-email-column" style="margin:0;padding:0">
+                                            <div
+                                              style="margin:0;padding:0;font-size:12px;font-weight:bold;letter-spacing:3px;color:#e1bd8d"
+                                            >
+                                              <p style="margin:0;padding:0">AFSHA CREATIVE SOLUTION</p>
+                                            </div>
+                                            <div
+                                              style="margin:0;padding:0;padding-top:7px;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#99938a"
+                                            >
+                                              <p style="margin:0;padding:0">Made to measure · Moradabad, India</p>
+                                            </div>
+                                          </td>
+                                          <td
+                                            align="right"
+                                            data-id="__react-email-column"
+                                            style="margin:0;padding:0;font-size:9px;letter-spacing:1.8px;color:#8c8479"
+                                          >
+                                            <p style="margin:0;padding:0">WEBSITE ENQUIRY</p>
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </td>
+                                </tr>
+                                <tr style="margin:0;padding:0">
+                                  <td
+                                    class="email-padding"
+                                    data-id="__react-email-column"
+                                    style="margin:0;padding:32px 38px 22px"
+                                  >
+                                    <div
+                                      style="margin:0;padding:0;font-size:9px;font-weight:bold;letter-spacing:2.5px;color:#c99f6c;text-transform:uppercase"
+                                    >
+                                      <p style="margin:0;padding:0">{{{ENQUIRY_HEADING}}}</p>
+                                    </div>
+                                    <h1
+                                      style="margin:12px 0 0;padding:0;font-size:28px;font-weight:400;line-height:1.25;color:#f5f1e9"
+                                    >
+                                      {{{CATEGORY}}}
+                                    </h1>
+                                    <p style="margin:10px 0 0;padding:0;font-size:13px;line-height:1.7;color:#aaa39a">
+                                      A new request has been submitted through the contact form. Reference
+                                      <span style="color:#e1bd8d">{{{ENQUIRY_REFERENCE}}}</span>
+                                    </p>
+                                  </td>
+                                </tr>
+                                <tr style="margin:0;padding:0">
+                                  <td
+                                    class="email-padding"
+                                    data-id="__react-email-column"
+                                    style="margin:0;padding:0 38px 16px"
+                                  >
+                                    {{{PRODUCT_SECTION_HTML}}}
+                                  </td>
+                                </tr>
+                                <tr style="margin:0;padding:0">
+                                  <td
+                                    class="email-padding"
+                                    data-id="__react-email-column"
+                                    style="margin:0;padding:8px 38px 12px"
+                                  >
+                                    <table
+                                      width="100%"
+                                      border="0"
+                                      cellpadding="0"
+                                      cellspacing="0"
+                                      role="presentation"
+                                      style="margin-top:0;margin-right:0;margin-bottom:0;margin-left:0;padding-top:0;padding-right:0;padding-bottom:0;padding-left:0;border-top:1px solid #30291f;border-left:1px solid #30291f"
+                                    >
+                                      <tbody>
+                                        <tr style="margin:0;padding:0">
+                                          <td
+                                            class="field-cell"
+                                            data-id="__react-email-column"
+                                            style="margin:0;padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f"
+                                          >
+                                            <div
+                                              style="margin:0;padding:0;font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80"
+                                            >
+                                              <p style="margin:0;padding:0">Customer</p>
+                                            </div>
+                                            <div
+                                              style="margin:0;padding:0;padding-top:8px;font-size:14px;line-height:1.5;color:#f5f1e9"
+                                            >
+                                              <p style="margin:0;padding:0">{{{CUSTOMER_NAME}}}</p>
+                                            </div>
+                                          </td>
+                                          <td
+                                            class="field-cell"
+                                            data-id="__react-email-column"
+                                            style="margin:0;padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f"
+                                          >
+                                            <div
+                                              style="margin:0;padding:0;font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80"
+                                            >
+                                              <p style="margin:0;padding:0">Phone</p>
+                                            </div>
+                                            <div
+                                              style="margin:0;padding:0;padding-top:8px;font-size:14px;line-height:1.5;color:#f5f1e9"
+                                            >
+                                              <p style="margin:0;padding:0">{{{CUSTOMER_PHONE}}}</p>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                        <tr style="margin:0;padding:0">
+                                          <td
+                                            class="field-cell"
+                                            data-id="__react-email-column"
+                                            style="margin:0;padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f"
+                                          >
+                                            <div
+                                              style="margin:0;padding:0;font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80"
+                                            >
+                                              <p style="margin:0;padding:0">Email address</p>
+                                            </div>
+                                            <div
+                                              style="margin:0;padding:0;padding-top:8px;font-size:14px;line-height:1.5;word-break:break-word;color:#e1bd8d"
+                                            >
+                                              <p style="margin:0;padding:0">{{{CUSTOMER_EMAIL}}}</p>
+                                            </div>
+                                          </td>
+                                          <td
+                                            class="field-cell"
+                                            data-id="__react-email-column"
+                                            style="margin:0;padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f"
+                                          >
+                                            <div
+                                              style="margin:0;padding:0;font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80"
+                                            >
+                                              <p style="margin:0;padding:0">Submitted</p>
+                                            </div>
+                                            <div
+                                              style="margin:0;padding:0;padding-top:8px;font-size:14px;line-height:1.5;color:#f5f1e9"
+                                            >
+                                              <p style="margin:0;padding:0">{{{SUBMITTED_AT}}}</p>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                        <tr style="margin:0;padding:0">
+                                          <td
+                                            class="field-cell"
+                                            data-id="__react-email-column"
+                                            style="margin:0;padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f"
+                                          >
+                                            <div
+                                              style="margin:0;padding:0;font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80"
+                                            >
+                                              <p style="margin:0;padding:0">City</p>
+                                            </div>
+                                            <div
+                                              style="margin:0;padding:0;padding-top:8px;font-size:14px;line-height:1.5;color:#f5f1e9"
+                                            >
+                                              <p style="margin:0;padding:0">{{{CITY}}}</p>
+                                            </div>
+                                          </td>
+                                          <td
+                                            class="field-cell"
+                                            data-id="__react-email-column"
+                                            style="margin:0;padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f"
+                                          >
+                                            <div
+                                              style="margin:0;padding:0;font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80"
+                                            >
+                                              <p style="margin:0;padding:0">Product</p>
+                                            </div>
+                                            <div
+                                              style="margin:0;padding:0;padding-top:8px;font-size:14px;line-height:1.5;color:#f5f1e9"
+                                            >
+                                              <p style="margin:0;padding:0">{{{PRODUCT}}}</p>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                        <tr style="margin:0;padding:0">
+                                          <td
+                                            class="field-cell"
+                                            data-id="__react-email-column"
+                                            style="margin:0;padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f"
+                                          >
+                                            <div
+                                              style="margin:0;padding:0;font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80"
+                                            >
+                                              <p style="margin:0;padding:0">Dimensions</p>
+                                            </div>
+                                            <div
+                                              style="margin:0;padding:0;padding-top:8px;font-size:14px;line-height:1.5;color:#f5f1e9"
+                                            >
+                                              <p style="margin:0;padding:0">{{{DIMENSIONS}}}</p>
+                                            </div>
+                                          </td>
+                                          <td
+                                            class="field-cell"
+                                            data-id="__react-email-column"
+                                            style="margin:0;padding:16px;border-right:1px solid #30291f;border-bottom:1px solid #30291f"
+                                          >
+                                            <div
+                                              style="margin:0;padding:0;font-size:9px;letter-spacing:1.7px;text-transform:uppercase;color:#948b80"
+                                            >
+                                              <p style="margin:0;padding:0">Reference image</p>
+                                            </div>
+                                            <div
+                                              style="margin:0;padding:0;padding-top:8px;font-size:14px;line-height:1.5;color:#f5f1e9"
+                                            >
+                                              <p style="margin:0;padding:0">{{{REFERENCE_IMAGE}}}</p>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </td>
+                                </tr>
+                                <tr style="margin:0;padding:0">
+                                  <td
+                                    class="email-padding"
+                                    data-id="__react-email-column"
+                                    style="margin:0;padding:18px 38px 8px"
+                                  >
+                                    <div
+                                      style="margin:0;padding:0;font-size:9px;letter-spacing:1.8px;text-transform:uppercase;color:#c99f6c"
+                                    >
+                                      <p style="margin:0;padding:0">Project details</p>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr style="margin:0;padding:0">
+                                  <td
+                                    class="email-padding"
+                                    data-id="__react-email-column"
+                                    style="margin:0;padding:0 38px 24px"
+                                  >
+                                    <div
+                                      class="message-cell"
+                                      style="margin:0;padding:20px;border:1px solid #30291f;background:#171512;font-size:14px;line-height:1.8;color:#e8e2d9;white-space:pre-wrap"
+                                    >
+                                      <p style="margin:0;padding:0">{{{MESSAGE}}}</p>
+                                      {{{REFERENCE_IMAGE_HTML}}}
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr style="margin:0;padding:0">
+                                  <td
+                                    class="email-padding"
+                                    data-id="__react-email-column"
+                                    style="margin:0;padding:0 38px 32px"
+                                  >
+                                    <p style="margin:0;padding:0">
+                                      <a
+                                        href="mailto:{{{CUSTOMER_EMAIL}}}?subject=Re%3A%20Project%20enquiry%20{{{ENQUIRY_REFERENCE}}}"
+                                        rel="noopener noreferrer nofollow"
+                                        style="color:#e1bd8d;text-decoration-line:none;text-decoration:none;display:inline-block;padding:14px 22px;border:1px solid #c99f6c;border-radius:999px;font-size:10px;font-weight:bold;letter-spacing:1.8px;text-transform:uppercase"
+                                        target="_blank"
+                                        >Reply to customer →</a
+                                      >
+                                    </p>
+                                  </td>
+                                </tr>
+                                <tr style="margin:0;padding:0">
+                                  <td
+                                    class="email-padding"
+                                    data-id="__react-email-column"
+                                    style="margin:0;padding:18px 38px;border-top:1px solid #30291f;font-size:10px;line-height:1.7;color:#8e887f"
+                                  >
+                                    <p style="margin:0;padding:0">
+                                      Afsha Creative Solution · Moradabad, India<br /><a
+                                        href="{{{SITE_URL}}}"
+                                        rel="noopener noreferrer nofollow"
+                                        style="color:#c99f6c;text-decoration-line:none;text-decoration:none"
+                                        target="_blank"
+                                        >View website</a
+                                      >
+                                    </p>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
             </table>
-          </td></tr>
-          <tr><td class="email-padding" style="padding:18px 38px 8px;"><div style="font-size:9px;letter-spacing:1.8px;text-transform:uppercase;color:#c99f6c;">Project details</div></td></tr>
-          <tr><td class="email-padding" style="padding:0 38px 24px;">
-            <div class="message-cell" style="padding:20px;border:1px solid #30291f;background:#171512;font-size:14px;line-height:1.8;color:#e8e2d9;white-space:pre-wrap;">{{{MESSAGE}}}</div>
-          </td></tr>
-          <tr><td class="email-padding" style="padding:0 38px 32px;">
-            <a href="mailto:{{{CUSTOMER_EMAIL}}}?subject=Re%3A%20Project%20enquiry%20{{{ENQUIRY_REFERENCE}}}" style="display:inline-block;padding:14px 22px;border:1px solid #c99f6c;border-radius:999px;color:#e1bd8d;font-size:10px;font-weight:bold;letter-spacing:1.8px;text-decoration:none;text-transform:uppercase;">Reply to customer&nbsp; →</a>
-          </td></tr>
-          <tr><td class="email-padding" style="padding:18px 38px;border-top:1px solid #30291f;font-size:10px;line-height:1.7;color:#8e887f;">Afsha Creative Solution · Moradabad, India<br><a href="{{{SITE_URL}}}" style="color:#c99f6c;text-decoration:none;">View website</a></td></tr>
-        </table>
-      </td></tr>
+          </td>
+        </tr>
+      </tbody>
     </table>
   </body>
 </html>

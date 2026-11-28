@@ -1,8 +1,9 @@
 import { ImageResponse } from "next/og";
 import { getPublicProduct } from "@/lib/catalog";
-import { SITE_NAME, PRODUCTION_SITE_URL } from "@/lib/site-config";
+import { resolveOgPhotoDataUri } from "@/lib/og-image-loader";
 
 export const runtime = "nodejs";
+export const revalidate = 300;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -18,7 +19,13 @@ export default async function ProductOpenGraphImage({ params }: Props) {
   const categoryName = product?.category?.name || "Custom Fabrication";
   const finishes = product?.finish_options?.slice(0, 3).join(" · ") || "Made to Measure";
   const primaryImage = product?.images?.find((i) => i.is_primary) ?? product?.images?.[0];
-  const imageUrl = primaryImage?.url;
+  const otherImageUrls = (product?.images ?? [])
+    .filter((i) => i.id !== primaryImage?.id)
+    .map((i) => i.url);
+  const photoDataUri = await resolveOgPhotoDataUri(
+    [primaryImage?.url, ...otherImageUrls],
+    product?.category?.slug
+  );
 
   return new ImageResponse(
     (
@@ -67,7 +74,7 @@ export default async function ProductOpenGraphImage({ params }: Props) {
                 AFSHA
               </span>
               <span style={{ fontSize: "9px", letterSpacing: "0.25em", color: "#A7A7A7" }}>
-                CREATIVE SOLUTION
+                CREATIVE SOLUTIONS
               </span>
             </div>
           </div>
@@ -138,10 +145,10 @@ export default async function ProductOpenGraphImage({ params }: Props) {
             overflow: "hidden",
           }}
         >
-          {imageUrl ? (
+          {photoDataUri ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={imageUrl}
+              src={photoDataUri}
               alt={title}
               style={{
                 width: "100%",

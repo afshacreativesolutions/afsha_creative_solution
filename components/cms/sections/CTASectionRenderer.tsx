@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, MessageCircle, Phone } from "lucide-react";
+import { ArrowRight, Phone } from "lucide-react";
 import CTASection from "@/components/CTASection";
+import TrackedActionLink from "@/components/lead/TrackedActionLink";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import type { CTABannerContent } from "@/lib/cms/types";
 
 export default function CTASectionRenderer({ content }: { content: CTABannerContent }) {
@@ -129,16 +131,31 @@ export default function CTASectionRenderer({ content }: { content: CTABannerCont
           )}
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            {content.primaryButton && (
-              <a
-                href={content.primaryButton.href}
-                target={content.primaryButton.external ? "_blank" : undefined}
-                rel={content.primaryButton.external ? "noopener noreferrer" : undefined}
-                className="inline-flex min-h-12 items-center gap-2 rounded-full border border-textGold bg-textGold px-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-black transition hover:bg-white"
-              >
-                <MessageCircle size={16} /> {content.primaryButton.label}
-              </a>
-            )}
+            {content.primaryButton &&
+              (content.primaryButton.href.includes("wa.me") ? (
+                <TrackedActionLink
+                  href={content.primaryButton.href}
+                  eventName="whatsapp_click"
+                  trackingProps={{
+                    placement: "cta_centered_help_card",
+                    channel: "whatsapp",
+                  }}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-full border border-textGold bg-textGold px-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-black transition hover:bg-white"
+                >
+                  <WhatsAppIcon size={16} /> {content.primaryButton.label}
+                </TrackedActionLink>
+              ) : (
+                <a
+                  href={content.primaryButton.href}
+                  target={content.primaryButton.external ? "_blank" : undefined}
+                  rel={content.primaryButton.external ? "noopener noreferrer" : undefined}
+                  className="inline-flex min-h-12 items-center gap-2 rounded-full border border-textGold bg-textGold px-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-black transition hover:bg-white"
+                >
+                  <WhatsAppIcon size={16} /> {content.primaryButton.label}
+                </a>
+              ))}
             {content.secondaryButton && (
               <a
                 href={content.secondaryButton.href}

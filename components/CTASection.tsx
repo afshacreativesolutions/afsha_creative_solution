@@ -1,5 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import TrackedActionLink from "@/components/lead/TrackedActionLink";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
+import type { AllowedEventName } from "@/lib/tracker";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export type CTASectionProps = {
   eyebrow?: string;
@@ -9,23 +13,28 @@ export type CTASectionProps = {
   primaryHref?: string;
   secondaryLabel?: string;
   secondaryHref?: string;
+  trackingEvent?: AllowedEventName;
+  trackingProps?: Record<string, string | number | boolean | null | undefined>;
   className?: string;
 };
 
-const defaultWhatsapp =
-  "https://wa.me/919634776691?text=Hello%20Afsha%20Creative%20Solution%2C%20I%20would%20like%20to%20discuss%20a%20custom%20metalwork%20project.";
+const defaultWhatsapp = buildWhatsAppUrl({ intent: "general" });
 
 export default function CTASection({
   eyebrow = "Your space, your specification",
   title = "Have a design in mind? Let's make it real.",
   description = "Share your architectural drawings, sketches, or dimensions. We craft custom gates and railings to order in Moradabad.",
-  primaryLabel = "Discuss On WhatsApp",
+  primaryLabel = "Enquire on WhatsApp",
   primaryHref = defaultWhatsapp,
   secondaryLabel = "Request A Custom Quote",
   secondaryHref = "/custom-metalwork",
+  trackingEvent = "whatsapp_click",
+  trackingProps,
   className = "",
 }: CTASectionProps) {
   const isWhatsapp = primaryHref.includes("wa.me");
+  const buttonClasses =
+    "group inline-flex min-h-12 items-center justify-between gap-4 rounded-full border border-textGold bg-textGold/10 px-6 py-3.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-textGold transition-colors hover:bg-textGold hover:text-black";
 
   return (
     <section className={`border-y border-white/10 bg-[#080808] px-4 py-12 sm:px-6 sm:py-20 ${className}`}>
@@ -45,18 +54,32 @@ export default function CTASection({
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Link
-            href={primaryHref}
-            target={isWhatsapp ? "_blank" : undefined}
-            rel={isWhatsapp ? "noopener noreferrer" : undefined}
-            className="group inline-flex min-h-12 items-center justify-between gap-4 rounded-full border border-textGold bg-textGold/10 px-6 py-3.5 text-[10px] uppercase tracking-[0.18em] text-textGold transition-colors hover:bg-textGold hover:text-black"
-          >
-            <span className="flex items-center gap-2">
-              {isWhatsapp && <MessageCircle size={15} />}
-              {primaryLabel}
-            </span>
-            <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-          </Link>
+          {isWhatsapp ? (
+            <TrackedActionLink
+              href={primaryHref}
+              eventName={trackingEvent}
+              trackingProps={
+                trackingProps || {
+                  placement: "cta_section",
+                  channel: "whatsapp",
+                }
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonClasses}
+            >
+              <span className="flex items-center gap-2">
+                <WhatsAppIcon size={15} />
+                {primaryLabel}
+              </span>
+              <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+            </TrackedActionLink>
+          ) : (
+            <Link href={primaryHref} className={buttonClasses}>
+              <span className="flex items-center gap-2">{primaryLabel}</span>
+              <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+            </Link>
+          )}
 
           {secondaryLabel && secondaryHref && (
             <Link

@@ -2,15 +2,19 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image, { type StaticImageData } from "next/image";
-import { ChevronLeft, ChevronRight, FileText, MessageCircle, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, X, ZoomIn } from "lucide-react";
 import { useOptionalEnquiry } from "@/components/lead/EnquiryContext";
+import TrackedActionLink from "@/components/lead/TrackedActionLink";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { trackEvent } from "@/lib/tracker";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export type GalleryItem = {
   id: string;
   title: string;
   category: string;
   categorySlug: string;
+  productSlug?: string;
   material: string;
   description: string;
   image: string | StaticImageData;
@@ -29,9 +33,11 @@ const DEFAULT_CATEGORIES = [
 export default function GalleryLightbox({
   items,
   categories = DEFAULT_CATEGORIES,
+  whatsappNumber,
 }: {
   items: GalleryItem[];
   categories?: Array<{ slug: string; name: string }>;
+  whatsappNumber?: string;
 }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -86,6 +92,14 @@ export default function GalleryLightbox({
   }, [lightboxIndex, closeLightbox, showNext, showPrev, setSuppressedByOverlay]);
 
   const currentItem = lightboxIndex !== null ? filteredItems[lightboxIndex] : null;
+  const currentWaUrl = currentItem
+    ? buildWhatsAppUrl({
+        intent: "gallery",
+        whatsappNumber,
+        projectName: currentItem.title,
+        projectUrl: currentItem.productSlug ? `/products/${currentItem.productSlug}` : "/gallery",
+      })
+    : "";
 
   return (
     <div>
@@ -101,7 +115,7 @@ export default function GalleryLightbox({
                 setActiveCategory(cat.slug);
                 setLightboxIndex(null);
               }}
-              className={`shrink-0 rounded-full border px-4 py-2.5 text-[10px] uppercase tracking-[0.16em] transition-colors ${
+              className={`min-h-11 shrink-0 rounded-full border px-4 py-2.5 text-[10px] uppercase tracking-[0.16em] transition-colors ${
                 isActive
                   ? "border-textGold bg-textGold font-semibold text-black"
                   : "border-white/12 text-white/60 hover:border-white/30 hover:text-white"
@@ -115,64 +129,100 @@ export default function GalleryLightbox({
 
       {/* Gallery Grid */}
       {filteredItems.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
-          {filteredItems.map((item, idx) => (
-            <div
-              key={item.id}
-              onClick={() => openLightbox(idx)}
-              className="group relative aspect-[3/4] cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-[#101010]"
-            >
-              <Image
-                src={item.image}
-                alt={item.alt}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-              />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredItems.map((item, idx) => {
+            const cardWaUrl = buildWhatsAppUrl({
+              intent: "gallery",
+              whatsappNumber,
+              projectName: item.title,
+              projectUrl: item.productSlug ? `/products/${item.productSlug}` : "/gallery",
+            });
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-90" />
+            return (
+              <article
+                key={item.id}
+                className="group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#0b0b0b] transition-colors hover:border-textGold/40"
+              >
+                <button
+                  type="button"
+                  onClick={() => openLightbox(idx)}
+                  aria-label={`Preview ${item.title}`}
+                  className="relative aspect-[4/3] w-full cursor-pointer overflow-hidden bg-[#101010] text-left"
+                >
+                  <Image
+                    src={item.image}
+                    alt={item.alt}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-90" />
+                  <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/65 text-white/80 backdrop-blur-sm transition-all duration-300 group-hover:text-textGold">
+                    <ZoomIn size={15} />
+                  </span>
+                </button>
 
-              <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white/70 opacity-0 backdrop-blur-sm transition-all duration-300 group-hover:opacity-100 sm:right-4 sm:top-4">
-                <ZoomIn size={15} />
-              </span>
+                <div className="flex flex-1 flex-col p-4">
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-textGold">
+                    {item.category}
+                  </p>
+                  <h3 className="mt-1 line-clamp-1 text-sm font-light text-white sm:text-base">
+                    {item.title}
+                  </h3>
+                  <p className="mt-0.5 line-clamp-1 text-xs text-white/50">{item.material}</p>
 
-              <div className="absolute inset-x-0 bottom-0 p-3 transition-transform duration-300 sm:p-5">
-                <p className="text-[8px] uppercase tracking-[0.2em] text-textGold sm:text-[9px]">
-                  {item.category}
-                </p>
-                <h3 className="mt-1 line-clamp-1 text-xs font-light text-white sm:text-sm">
-                  {item.title}
-                </h3>
-                <p className="mt-0.5 line-clamp-1 text-[10px] text-white/50 sm:text-xs">
-                  {item.material}
-                </p>
-                {enquiry && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void trackEvent("quote_cta_click", {
+                  <div className="mt-auto flex flex-col gap-2 pt-4 sm:flex-row sm:items-center">
+                    <TrackedActionLink
+                      href={cardWaUrl}
+                      eventName="gallery_enquiry_click"
+                      trackingProps={{
                         placement: "gallery_card",
+                        channel: "whatsapp",
                         categorySlug: item.categorySlug || "custom-metalwork",
-                      });
-                      enquiry.openEnquiryModal({
-                        title: `Quote: ${item.title}`,
-                        subtitle: `${item.category} · ${item.material}`,
-                        productName: item.title,
-                        categorySlug: item.categorySlug || "custom-metalwork",
-                        placement: "gallery_page",
-                      });
-                    }}
-                    aria-label={`Request quote for ${item.title}`}
-                    className="mt-2.5 inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border border-textGold/60 bg-black/85 px-3 text-[10px] font-medium uppercase tracking-[0.14em] text-textGold transition hover:bg-textGold hover:text-black sm:w-auto sm:px-4"
-                  >
-                    <FileText size={13} />
-                    <span>Enquire</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+                        productSlug: item.productSlug || null,
+                        sourcePage: "/gallery",
+                      }}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      ariaLabel={`Enquire on WhatsApp about ${item.title}`}
+                      className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full border border-textGold/60 bg-textGold/10 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-textGold transition hover:bg-textGold hover:text-black"
+                    >
+                      <WhatsAppIcon size={13} />
+                      <span>Enquire on WhatsApp</span>
+                    </TrackedActionLink>
+                    {enquiry && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void trackEvent("gallery_enquiry_click", {
+                            placement: "gallery_card",
+                            channel: "quote_modal",
+                            categorySlug: item.categorySlug || "custom-metalwork",
+                            productSlug: item.productSlug || null,
+                            sourcePage: "/gallery",
+                          });
+                          enquiry.openEnquiryModal({
+                            title: `Quote: ${item.title}`,
+                            subtitle: `${item.category} · ${item.material}`,
+                            productName: item.title,
+                            productSlug: item.productSlug,
+                            categorySlug: item.categorySlug || "custom-metalwork",
+                            placement: "gallery_page",
+                            pageUrl: "/gallery",
+                          });
+                        }}
+                        aria-label={`Request quote for ${item.title}`}
+                        className="inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-white/15 px-3.5 text-[10px] uppercase tracking-[0.12em] text-white/80 transition hover:border-textGold/50 hover:text-white"
+                      >
+                        <FileText size={13} />
+                        <span>Quote</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       ) : (
         <div className="border border-white/10 py-20 text-center text-sm text-white/45">
@@ -200,7 +250,7 @@ export default function GalleryLightbox({
             type="button"
             onClick={showPrev}
             aria-label="Previous project"
-            className="absolute left-2 top-1/2 z-40 -translate-y-1/2 rounded-full border border-white/15 bg-black/70 p-2.5 text-white transition hover:border-textGold hover:text-textGold sm:left-6 sm:p-3.5"
+            className="absolute left-2 top-1/2 z-40 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/70 p-2.5 text-white transition hover:border-textGold hover:text-textGold sm:left-6 sm:p-3.5"
           >
             <ChevronLeft size={22} />
           </button>
@@ -209,7 +259,7 @@ export default function GalleryLightbox({
             type="button"
             onClick={showNext}
             aria-label="Next project"
-            className="absolute right-2 top-1/2 z-40 -translate-y-1/2 rounded-full border border-white/15 bg-black/70 p-2.5 text-white transition hover:border-textGold hover:text-textGold sm:right-6 sm:p-3.5"
+            className="absolute right-2 top-1/2 z-40 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/70 p-2.5 text-white transition hover:border-textGold hover:text-textGold sm:right-6 sm:p-3.5"
           >
             <ChevronRight size={22} />
           </button>
@@ -258,17 +308,22 @@ export default function GalleryLightbox({
                     type="button"
                     onClick={() => {
                       const target = currentItem;
-                      void trackEvent("quote_cta_click", {
+                      void trackEvent("gallery_enquiry_click", {
                         placement: "gallery_lightbox",
+                        channel: "quote_modal",
                         categorySlug: target.categorySlug || "custom-metalwork",
+                        productSlug: target.productSlug || null,
+                        sourcePage: "/gallery",
                       });
                       closeLightbox();
                       enquiry.openEnquiryModal({
                         title: `Quote: ${target.title}`,
                         subtitle: `${target.category} · ${target.material}`,
                         productName: target.title,
+                        productSlug: target.productSlug,
                         categorySlug: target.categorySlug || "custom-metalwork",
                         placement: "gallery_page",
+                        pageUrl: "/gallery",
                       });
                     }}
                     className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-textGold bg-textGold px-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-black transition hover:bg-white"
@@ -276,22 +331,22 @@ export default function GalleryLightbox({
                     <FileText size={16} /> Get Free Quote for Similar Design
                   </button>
                 )}
-                <a
-                  href={`https://wa.me/919634776691?text=${encodeURIComponent(
-                    `Hello Afsha Creative Solution, I saw this design in your gallery and would like a quote:\n\nProject: ${currentItem.title}\nCategory: ${currentItem.category}\nMaterial: ${currentItem.material}`
-                  )}`}
+                <TrackedActionLink
+                  href={currentWaUrl}
+                  eventName="gallery_enquiry_click"
+                  trackingProps={{
+                    placement: "gallery_lightbox",
+                    channel: "whatsapp",
+                    categorySlug: currentItem.categorySlug || "custom-metalwork",
+                    productSlug: currentItem.productSlug || null,
+                    sourcePage: "/gallery",
+                  }}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => {
-                    void trackEvent("whatsapp_click", {
-                      placement: "gallery_lightbox",
-                      categorySlug: currentItem.categorySlug || "custom-metalwork",
-                    });
-                  }}
-                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-white/20 px-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-white transition hover:border-textGold hover:text-textGold"
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-textGold/60 bg-textGold/10 px-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-textGold transition hover:bg-textGold hover:text-black"
                 >
-                  <MessageCircle size={16} /> Discuss on WhatsApp
-                </a>
+                  <WhatsAppIcon size={16} /> Enquire on WhatsApp
+                </TrackedActionLink>
               </div>
             </div>
           </div>

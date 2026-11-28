@@ -8,27 +8,35 @@ import {
   Camera,
   CheckCircle2,
   LoaderCircle,
-  MessageCircle,
+  Mail,
   Trash2,
 } from "lucide-react";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { getOrCreateSessionId, getOrCreateVisitorId } from "@/lib/consent-store";
 import { ALLOWED_IMAGE_TYPES } from "@/lib/image-security";
 import {
   MAX_LEAD_PHOTO_BYTES,
   validateLeadFields,
+  type LeadEnquiryType,
   type LeadFieldErrors,
 } from "@/lib/lead-validation";
 import { getAttributionFromUrl, trackEvent } from "@/lib/tracker";
-import { useOptionalEnquiry } from "./EnquiryContext";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { useOptionalEnquiry, type EnquiryMode } from "./EnquiryContext";
 
 export type LeadCategoryOption = { slug: string; name: string };
 
 export type LeadEnquiryFormProps = {
   categories?: LeadCategoryOption[];
+  enquiryMode?: EnquiryMode;
   defaultCategory?: string;
+  categoryName?: string;
   productId?: string;
   productSlug?: string;
   productName?: string;
+  productDescription?: string;
+  productImageUrl?: string;
+  productUrl?: string;
   designCode?: string;
   placement?: string;
   whatsappNumber?: string;
@@ -62,10 +70,15 @@ const labelClass =
 
 export default function LeadEnquiryForm({
   categories = [],
+  enquiryMode = "quote",
   defaultCategory = "",
+  categoryName = "",
   productId = "",
   productSlug = "",
   productName = "",
+  productDescription = "",
+  productImageUrl = "",
+  productUrl = "",
   designCode = "",
   placement = "website",
   whatsappNumber = "919634776691",
@@ -82,15 +95,13 @@ export default function LeadEnquiryForm({
   const formStartedRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFormInteraction = () => {
-    if (formStartedRef.current) return;
-    formStartedRef.current = true;
-    void trackEvent("enquiry_form_start", {
-      placement,
-      category: category || defaultCategory || "general",
-      productSlug: productSlug || null,
-    });
-  };
+  const isEmailQuote = enquiryMode === "email_quote";
+  const isProductEnquiry = Boolean(productSlug || productId || productName);
+  const resolvedEnquiryType: LeadEnquiryType = isEmailQuote
+    ? "product_email_quote"
+    : isProductEnquiry
+      ? "product_quote"
+      : "general_quote";
 
   const enquiryCtx = useOptionalEnquiry();
   const setEmbeddedFormInView = enquiryCtx?.setEmbeddedFormInView;
@@ -137,8 +148,21 @@ export default function LeadEnquiryForm({
     whatsappUrl: string;
     name: string;
     city: string;
+    email: string;
     categoryLabel: string;
   } | null>(null);
+
+  const handleFormInteraction = () => {
+    if (formStartedRef.current) return;
+    formStartedRef.current = true;
+    void trackEvent(isProductEnquiry ? "product_enquiry_form_start" : "enquiry_form_start", {
+      placement,
+      enquiryType: resolvedEnquiryType,
+      category: category || defaultCategory || "general",
+      productSlug: productSlug || null,
+      sourcePage: pathname,
+    });
+  };
 
   useEffect(() => {
     if (!compact && setEmbeddedFormInView && rootRef.current) {
@@ -209,16 +233,30 @@ export default function LeadEnquiryForm({
 
     setSubmitError(null);
     const clientValidation = validateLeadFields(
-      { name, phone, category, city, email, dimensions, message },
-      true
+      {
+        name,
+        phone,
+        category: category || resolvedDefaultCategory || "custom-metalwork",
+        city,
+        email,
+        dimensions,
+        message,
+        enquiryType: resolvedEnquiryType,
+        productId,
+        productSlug,
+        productName,
+      },
+      !isEmailQuote
     );
 
     if (!clientValidation.valid) {
       setFieldErrors(clientValidation.errors);
-      void trackEvent("enquiry_form_error", {
+      void trackEvent(isProductEnquiry ? "product_enquiry_form_error" : "enquiry_form_error", {
         placement,
+        enquiryType: resolvedEnquiryType,
         category: category || "unset",
         productSlug: productSlug || null,
+        sourcePage: pathname,
         errorType: "validation",
       });
       const firstKey = Object.keys(clientValidation.errors)[0];
@@ -232,8 +270,10 @@ export default function LeadEnquiryForm({
     setSubmitting(true);
     void trackEvent("enquiry_form_submit", {
       placement,
+      enquiryType: resolvedEnquiryType,
       category: clientValidation.data.category,
       productSlug: productSlug || null,
+      sourcePage: pathname,
       hasPhoto: Boolean(photoFile),
     });
 
@@ -248,15 +288,16 @@ export default function LeadEnquiryForm({
         fd.append("name", clientValidation.data.name);
         fd.append("phone", clientValidation.data.phone);
         fd.append("category", clientValidation.data.category);
-        fd.append("city", clientValidation.data.city);
+        if (clientValidation.data.city) fd.append("city", clientValidation.data.city);
         if (email) fd.append("email", email);
         if (dimensions) fd.append("dimensions", dimensions);
         if (message) fd.append("message", message);
+        fd.append("enquiryType", resolvedEnquiryType);
         if (productId) fd.append("productId", productId);
         if (productSlug) fd.append("productSlug", productSlug);
         if (productName) fd.append("productName", productName);
         if (designCode) fd.append("designCode", designCode);
-        fd.append("pageUrl", pathname);
+        fd.append("pageUrl", productUrl || pathname);
         fd.append("placement", placement);
         fd.append("source", placement === "contact_page" ? "contact_page" : "quote_form");
         if (visitorId) fd.append("visitorId", visitorId);
@@ -282,14 +323,15 @@ export default function LeadEnquiryForm({
             phone: clientValidation.data.phone,
             email: clientValidation.data.email,
             category: clientValidation.data.category,
-            city: clientValidation.data.city,
+            ...(clientValidation.data.city ? { city: clientValidation.data.city } : {}),
             dimensions: clientValidation.data.dimensions,
             message: clientValidation.data.message,
+            enquiryType: resolvedEnquiryType,
             productId,
             productSlug,
             productName,
             designCode,
-            pageUrl: pathname,
+            pageUrl: productUrl || pathname,
             placement,
             source: placement === "contact_page" ? "contact_page" : "quote_form",
             visitorId,
@@ -317,28 +359,38 @@ export default function LeadEnquiryForm({
 
       const analyticsMeta = {
         category: clientValidation.data.category,
+        enquiryType: resolvedEnquiryType,
         placement,
         productSlug: productSlug || null,
+        sourcePage: pathname,
         hasPhoto: Boolean(photoFile),
       };
-      void trackEvent("quote_form_submit", analyticsMeta);
-      void trackEvent("enquiry_form_success", analyticsMeta);
+      if (isProductEnquiry) {
+        void trackEvent("product_enquiry_form_success", analyticsMeta);
+      } else {
+        void trackEvent("quote_form_submit", analyticsMeta);
+        void trackEvent("enquiry_form_success", analyticsMeta);
+      }
 
       const chosenLabel =
         productName ||
+        categoryName ||
         mergedOptions.find((o) => o.slug === clientValidation.data.category)?.name ||
         clientValidation.data.category;
 
-      const cleanDigits = whatsappNumber.replace(/\D/g, "") || "919634776691";
-      const fallbackWa = `https://wa.me/${cleanDigits}?text=${encodeURIComponent(
-        `Hello Afsha Creative Solution, my enquiry reference is ${json.reference} for ${chosenLabel} in ${clientValidation.data.city}.`
-      )}`;
+      const fallbackWa = buildWhatsAppUrl({
+        whatsappNumber,
+        message: `Hello Afsha Creative Solutions! My enquiry reference is ${json.reference} for ${chosenLabel}${
+          clientValidation.data.city ? ` in ${clientValidation.data.city}` : ""
+        }.`,
+      });
 
       setConfirmation({
         reference: json.reference,
         whatsappUrl: json.whatsappUrl || fallbackWa,
         name: clientValidation.data.name,
         city: clientValidation.data.city,
+        email: clientValidation.data.email,
         categoryLabel: chosenLabel,
       });
 
@@ -358,10 +410,12 @@ export default function LeadEnquiryForm({
       );
       onSuccess?.();
     } catch (err) {
-      void trackEvent("enquiry_form_error", {
+      void trackEvent(isProductEnquiry ? "product_enquiry_form_error" : "enquiry_form_error", {
         placement,
+        enquiryType: resolvedEnquiryType,
         category: clientValidation.data.category,
         productSlug: productSlug || null,
+        sourcePage: pathname,
         errorType: "submission_failed",
       });
       // Recoverable error preserves all entered field values automatically
@@ -408,9 +462,15 @@ export default function LeadEnquiryForm({
             Enquiry Ref: {confirmation.reference}
           </p>
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/75">
-            Your enquiry for <strong>{confirmation.categoryLabel}</strong> in{" "}
-            <strong>{confirmation.city}</strong> has been received. Our fabrication team will
-            reach out shortly with guidance and pricing.
+            Your enquiry for <strong>{confirmation.categoryLabel}</strong>
+            {confirmation.city ? (
+              <>
+                {" "}
+                in <strong>{confirmation.city}</strong>
+              </>
+            ) : null}{" "}
+            has been received. Our fabrication team will reach out shortly
+            {confirmation.email ? ` at ${confirmation.email}` : ""} with guidance and pricing.
           </p>
 
           <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
@@ -419,15 +479,17 @@ export default function LeadEnquiryForm({
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
-                void trackEvent("whatsapp_click", {
+                void trackEvent(isProductEnquiry ? "product_whatsapp_click" : "whatsapp_click", {
                   placement: "enquiry_confirmation",
+                  channel: "whatsapp",
                   category: confirmation.categoryLabel,
                   productSlug: productSlug || null,
+                  sourcePage: pathname,
                 });
               }}
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-textGold bg-textGold px-6 text-xs font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-white"
             >
-              <MessageCircle size={16} /> Chat Now on WhatsApp
+              <WhatsAppIcon size={16} /> Enquire on WhatsApp
             </a>
             <button
               type="button"
@@ -446,9 +508,32 @@ export default function LeadEnquiryForm({
           className="space-y-4 sm:space-y-5"
         >
           {productName && (
-            <div className="rounded-lg border border-textGold/30 bg-textGold/[0.06] px-3.5 py-2.5 text-xs text-textGold">
-              Enquiring about: <strong>{productName}</strong>
-              {designCode ? ` (Design ${designCode})` : ""}
+            <div className="flex items-start gap-3 rounded-xl border border-textGold/30 bg-textGold/[0.06] p-3.5 text-xs">
+              {productImageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={productImageUrl}
+                  alt={productName}
+                  className="h-16 w-16 shrink-0 rounded-lg border border-white/15 bg-[#111] object-cover"
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-textGold">
+                  {categoryName || "Product Quote"}
+                  {designCode ? ` · Design ${designCode}` : ""}
+                </p>
+                <p className="mt-0.5 text-sm font-medium text-white">{productName}</p>
+                {productDescription && (
+                  <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-white/60">
+                    {productDescription}
+                  </p>
+                )}
+                {(productUrl || productSlug) && (
+                  <p className="mt-1 truncate text-[10px] text-white/40">
+                    {productUrl || `https://www.afshacreative.in/products/${productSlug}`}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -511,51 +596,44 @@ export default function LeadEnquiryForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor={`${formId}-category`} className={labelClass}>
-                Product / Service Required *
+              <label htmlFor={`${formId}-email`} className={labelClass}>
+                {isEmailQuote ? "Email Address *" : "Email (Optional, for Estimate Copy)"}
               </label>
-              <select
-                id={`${formId}-category`}
-                name="category"
-                required
-                value={category}
+              <input
+                id={`${formId}-email`}
+                name="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                required={isEmailQuote}
+                value={email}
                 onChange={(e) => {
-                  setCategory(e.target.value);
-                  if (fieldErrors.category)
-                    setFieldErrors((p) => ({ ...p, category: undefined }));
+                  setEmail(e.target.value);
+                  if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: undefined }));
                 }}
-                aria-invalid={Boolean(fieldErrors.category)}
-                aria-describedby={fieldErrors.category ? `${formId}-cat-err` : undefined}
-                className={`${inputBase} cursor-pointer ${
-                  fieldErrors.category ? inputError : inputNormal
-                }`}
-              >
-                <option value="" disabled>
-                  Select gate, railing, or fabrication...
-                </option>
-                {mergedOptions.map((opt) => (
-                  <option key={opt.slug} value={opt.slug} className="bg-[#121212] text-white">
-                    {opt.name}
-                  </option>
-                ))}
-              </select>
-              {fieldErrors.category && (
-                <p id={`${formId}-cat-err`} className="mt-1.5 text-xs text-red-300">
-                  {fieldErrors.category}
+                placeholder="you@example.com"
+                maxLength={254}
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={fieldErrors.email ? `${formId}-email-err` : undefined}
+                className={`${inputBase} ${fieldErrors.email ? inputError : inputNormal}`}
+              />
+              {fieldErrors.email && (
+                <p id={`${formId}-email-err`} className="mt-1.5 text-xs text-red-300">
+                  {fieldErrors.email}
                 </p>
               )}
             </div>
 
             <div>
               <label htmlFor={`${formId}-city`} className={labelClass}>
-                City / Site Location *
+                {isEmailQuote ? "City / Site Location (Optional)" : "City / Site Location *"}
               </label>
               <input
                 id={`${formId}-city`}
                 name="city"
                 type="text"
                 autoComplete="address-level2"
-                required
+                required={!isEmailQuote}
                 value={city}
                 onChange={(e) => {
                   setCity(e.target.value);
@@ -594,7 +672,45 @@ export default function LeadEnquiryForm({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
+            {!isEmailQuote && (
+              <div>
+                <label htmlFor={`${formId}-category`} className={labelClass}>
+                  Product / Service Required *
+                </label>
+                <select
+                  id={`${formId}-category`}
+                  name="category"
+                  required
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    if (fieldErrors.category)
+                      setFieldErrors((p) => ({ ...p, category: undefined }));
+                  }}
+                  aria-invalid={Boolean(fieldErrors.category)}
+                  aria-describedby={fieldErrors.category ? `${formId}-cat-err` : undefined}
+                  className={`${inputBase} cursor-pointer ${
+                    fieldErrors.category ? inputError : inputNormal
+                  }`}
+                >
+                  <option value="" disabled>
+                    Select gate, railing, or fabrication...
+                  </option>
+                  {mergedOptions.map((opt) => (
+                    <option key={opt.slug} value={opt.slug} className="bg-[#121212] text-white">
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+                {fieldErrors.category && (
+                  <p id={`${formId}-cat-err`} className="mt-1.5 text-xs text-red-300">
+                    {fieldErrors.category}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className={isEmailQuote ? "sm:col-span-2" : ""}>
               <label htmlFor={`${formId}-dimensions`} className={labelClass}>
                 Approx Dimensions or Quantity (Optional)
               </label>
@@ -608,30 +724,6 @@ export default function LeadEnquiryForm({
                 maxLength={200}
                 className={`${inputBase} ${inputNormal}`}
               />
-            </div>
-
-            <div>
-              <label htmlFor={`${formId}-email`} className={labelClass}>
-                Email (Optional, for Estimate Copy)
-              </label>
-              <input
-                id={`${formId}-email`}
-                name="email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: undefined }));
-                }}
-                placeholder="you@example.com"
-                maxLength={254}
-                className={`${inputBase} ${fieldErrors.email ? inputError : inputNormal}`}
-              />
-              {fieldErrors.email && (
-                <p className="mt-1.5 text-xs text-red-300">{fieldErrors.email}</p>
-              )}
             </div>
           </div>
 
@@ -715,7 +807,7 @@ export default function LeadEnquiryForm({
               onChange={(e) => setMarketingWhatsApp(e.target.checked)}
               className="h-4 w-4 shrink-0 rounded border-white/25 bg-black accent-[#CDA274]"
             />
-            <span>Share design photos & price estimate updates with me on WhatsApp.</span>
+            <span>Share design photos &amp; price estimate updates with me on WhatsApp.</span>
           </label>
 
           {/* Honeypot */}
@@ -755,6 +847,11 @@ export default function LeadEnquiryForm({
                 <>
                   <LoaderCircle size={16} className="animate-spin" />
                   Sending Enquiry...
+                </>
+              ) : isEmailQuote ? (
+                <>
+                  <Mail size={15} />
+                  Send Email Quote Request
                 </>
               ) : (
                 <>

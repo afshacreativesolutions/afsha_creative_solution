@@ -2,14 +2,17 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, Calendar, Clock, MessageCircle, Sparkles, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, Clock, Sparkles, User } from "lucide-react";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CTASection from "@/components/CTASection";
 import JsonLd from "@/components/JsonLd";
+import TrackedActionLink from "@/components/lead/TrackedActionLink";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { getPublicBlogPost, getPublicBlogPosts } from "@/lib/catalog";
 import { getPublishedCmsSiteSettings } from "@/lib/cms/queries";
 import { getStaticBlogPost, STATIC_BLOG_POSTS, type StaticBlogPost } from "@/lib/blog-data";
 import { absoluteUrl } from "@/lib/seo";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 type BlogPageProps = { params: Promise<{ slug: string }> };
 
@@ -274,16 +277,23 @@ export default async function BlogDetailPage({ params }: BlogPageProps) {
             {tpl.ctaDescription}
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-4">
-            <a
-              href={`https://wa.me/${siteSettings.site_identity.whatsappNumber}?text=${encodeURIComponent(
-                `Hello ${siteSettings.site_identity.siteLegalName}, I read your article "${post.title}" and would like to discuss a similar metalwork design.`
-              )}`}
+            <TrackedActionLink
+              href={buildWhatsAppUrl({
+                whatsappNumber: siteSettings.site_identity.whatsappNumber,
+                message: `Hello Afsha Creative Solutions! I read your article "${post.title}" and would like to discuss a similar metalwork design.`,
+              })}
+              eventName="whatsapp_click"
+              trackingProps={{
+                placement: "blog_article_cta",
+                channel: "whatsapp",
+                sourcePage: `/blog/${post.slug}`,
+              }}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-11 items-center gap-2 rounded-full border border-textGold bg-textGold px-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-black transition hover:bg-white"
             >
-              <MessageCircle size={15} /> Discuss on WhatsApp
-            </a>
+              <WhatsAppIcon size={15} /> Enquire on WhatsApp
+            </TrackedActionLink>
             <Link
               href="/custom-metalwork"
               className="inline-flex min-h-11 items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-white/70 transition hover:text-white"
