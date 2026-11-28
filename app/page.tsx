@@ -4,6 +4,8 @@ import { Check, MapPin } from "lucide-react";
 import CMSPageRenderer from "@/components/cms/CMSPageRenderer";
 import LeadEnquiryForm from "@/components/lead/LeadEnquiryForm";
 import OpenQuoteButton from "@/components/lead/OpenQuoteButton";
+import HomeDiscoverySections from "@/components/HomeDiscoverySections";
+import { buildCollectionsSummary } from "@/lib/collections";
 import TrackedActionLink from "@/components/lead/TrackedActionLink";
 import WhatsAppIcon from "@/components/WhatsAppIcon";
 import { getPublicCategories, getPublicProducts } from "@/lib/catalog";
@@ -70,16 +72,44 @@ export default async function Home() {
 
   if (!page) notFound();
 
-  const hasWhyChoose = page.sections.some(
+  const collections = buildCollectionsSummary(categories, products);
+
+  const heroSections = page.sections.filter(
+    (s) => s.section_type === "hero_banner" || s.section_key === "home-hero"
+  );
+  const EXCLUDED_HOME_KEYS = new Set([
+    "home-collection-overview",
+    "home-collections-tabs",
+    "home-artisans-videos",
+    "home-testimonials",
+    "home-workshop-map",
+  ]);
+  const EXCLUDED_HOME_TYPES = new Set([
+    "testimonials",
+    "stats_counters",
+  ]);
+
+  const remainingHomeSections = page.sections.filter(
+    (s) =>
+      s.section_type !== "hero_banner" &&
+      s.section_key !== "home-hero" &&
+      !EXCLUDED_HOME_KEYS.has(s.section_key) &&
+      !EXCLUDED_HOME_TYPES.has(s.section_type)
+  );
+
+  const heroOnlyPage = { ...page, sections: heroSections };
+  const afterDiscoveryPage = { ...page, sections: remainingHomeSections };
+
+  const hasWhyChoose = remainingHomeSections.some(
     (s) => s.section_key.includes("why-choose") || /why\s+choose/i.test(s.title)
   );
-  const hasServiceAreas = page.sections.some(
+  const hasServiceAreas = remainingHomeSections.some(
     (s) =>
       s.section_key.includes("service-areas") ||
       (s.section_type === "contact_info" &&
         (s.content as { variant?: string })?.variant === "workshop_coverage")
   );
-  const hasQuoteForm = page.sections.some(
+  const hasQuoteForm = remainingHomeSections.some(
     (s) =>
       s.section_type === "contact_info" &&
       (s.content as { variant?: string })?.variant === "quote_form"
@@ -92,14 +122,9 @@ export default async function Home() {
 
   return (
     <>
-      <link
-        rel="preload"
-        as="image"
-        href="/videos/hero-poster.webp"
-        type="image/webp"
-        fetchPriority="high"
-      />
-      <CMSPageRenderer page={page} context={{ products, categories }} />
+      <CMSPageRenderer page={heroOnlyPage} context={{ products, categories }} />
+      <HomeDiscoverySections collections={collections} products={products} />
+      <CMSPageRenderer page={afterDiscoveryPage} context={{ products, categories }} />
 
       {!hasWhyChoose && (
         <section className="border-t border-white/10 bg-[#050505] px-4 py-12 sm:px-6 sm:py-16">

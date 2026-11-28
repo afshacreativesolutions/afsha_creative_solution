@@ -8,6 +8,7 @@ import AnimatedButton from "./AnimatedButton";
 import Link from "next/link";
 import { useOptionalConsent } from "./consent/ConsentProvider";
 import TrackedActionLink from "./lead/TrackedActionLink";
+import { normalizeFooterDiscoverLinks } from "@/lib/navigation";
 import type { CmsFooterSetting, CmsSiteIdentitySetting } from "@/lib/cms/types";
 
 const PLATFORM_ICON_SRC = {
@@ -66,17 +67,7 @@ const Footer = ({
           href: "https://wa.me/919634776691?text=Hello%20Afsha%20Creative%20Solution%2C%20I%20found%20your%20website%20and%20would%20like%20to%20discuss%20a%20metal%20fabrication%20project.",
         },
       ];
-  const discoverLinks = footer?.discoverLinks?.length
-    ? footer.discoverLinks
-    : [
-        { label: "Categories", href: "/categories" },
-        { label: "All Products", href: "/products" },
-        { label: "Gallery", href: "/gallery" },
-        { label: "Custom Metalwork", href: "/custom-metalwork" },
-        { label: "Services", href: "/services" },
-        { label: "FAQ", href: "/faq" },
-        { label: "Blog & Guides", href: "/blog" },
-      ];
+  const discoverLinks = normalizeFooterDiscoverLinks(footer?.discoverLinks);
   const localLinks = footer?.localLinks?.length
     ? footer.localLinks
     : [

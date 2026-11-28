@@ -4,6 +4,7 @@ import Feature from "@/components/Feature";
 import { Collections } from "@/components/Collections";
 import SectionHeading from "@/components/SectionHeading";
 import ProductsCatalog from "@/app/products/products-catalog";
+import { normalizePublicHref } from "@/lib/navigation";
 import CmsImage from "../CmsImage";
 import { collectionsData as fallbackCollections, croselData as fallbackProjects } from "@/utils/data";
 import type { CategoryRecord, ProductRecord } from "@/lib/catalog-types";
@@ -45,7 +46,11 @@ function resolveCategoryCardImage(
     if (matchingProduct) {
       const prodImg =
         matchingProduct.images?.find((img) => img.is_primary) ?? matchingProduct.images?.[0];
-      if (prodImg?.url) {
+      if (
+        prodImg?.url &&
+        !prodImg.url.toLowerCase().includes("balcony_railing") &&
+        !prodImg.url.toLowerCase().endsWith(".png")
+      ) {
         return { url: prodImg.url, alt: matchingProduct.name };
       }
     }
@@ -208,7 +213,7 @@ export default function ProductCategoryGridSection({
           id: cat.id,
           name: cat.name,
           slug: cat.slug,
-          href: `/categories/${cat.slug}`,
+          href: `/collections/${cat.slug}`,
           image: null,
           material: "Made to Measure Metalwork",
           description: cat.description || `Explore custom ${cat.name.toLowerCase()} fabricated to order.`,
@@ -219,6 +224,7 @@ export default function ProductCategoryGridSection({
 
   const configuredCards = rawCards.map((cat) => ({
     ...cat,
+    href: normalizePublicHref(cat.href),
     image: resolveCategoryCardImage(cat, products),
   }));
 
@@ -312,7 +318,7 @@ export default function ProductCategoryGridSection({
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] tracking-[0.2em] text-white/35">
-                      {String(index + 1).padStart(2, "0")} / CATEGORY
+                      {String(index + 1).padStart(2, "0")} / COLLECTION
                     </span>
                     {typeof count === "number" && count > 0 && (
                       <span className="rounded-full border border-textGold/30 bg-textGold/10 px-2.5 py-0.5 text-[9px] uppercase tracking-[0.14em] text-textGold">
@@ -358,7 +364,7 @@ export default function ProductCategoryGridSection({
                     href={category.href}
                     className="inline-flex min-h-11 w-full items-center justify-between rounded-lg border border-white/10 bg-white/[0.02] px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-white transition-all group-hover:border-textGold group-hover:bg-textGold group-hover:text-black"
                   >
-                    <span>Explore Category</span>
+                    <span>Explore Collection</span>
                     <ArrowRight size={14} />
                   </Link>
                 </div>

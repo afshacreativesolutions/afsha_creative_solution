@@ -201,7 +201,7 @@ test("SEED_CMS_PAGES covers all 12 core routes with valid sections, SEO metadata
     "/about",
     "/services",
     "/custom-metalwork",
-    "/categories",
+    "/collections",
     "/products",
     "/gallery",
     "/faq",
@@ -260,6 +260,52 @@ test("sanitizeSiteSettingsBundle strips scripts and keeps valid URLs", () => {
   const cleaned = validationMod.sanitizeSiteSettingsBundle(dirty, seedMod.DEFAULT_SITE_SETTINGS);
   assert.strictEqual(cleaned.site_identity.siteName, "Afsha Creative Solution");
   assert.strictEqual(cleaned.navigation.desktopLinks[0].href, "/");
+});
+
+const navMod = loadTsModule("lib/navigation.ts");
+const colMod = loadTsModule("lib/collections.ts");
+
+test("Collections-first navigation normalizes legacy /categories links cleanly", () => {
+  assert.strictEqual(navMod.normalizePublicHref("/categories"), "/collections");
+  assert.strictEqual(navMod.normalizePublicHref("/categories/gates"), "/collections/gates");
+  assert.strictEqual(navMod.normalizePublicHref("/products/modern-gate"), "/products/modern-gate");
+
+  const { primaryLinks, mobileLinks, quoteCta } = navMod.getPrimaryNavigation({
+    desktopLinks: [
+      { label: "Home", href: "/" },
+      { label: "Categories", href: "/categories" },
+      { label: "Collection", href: "/products" },
+      { label: "Gallery", href: "/gallery" },
+      { label: "Services", href: "/services" },
+      { label: "About", href: "/about" },
+    ],
+    contactLink: { label: "Contact", href: "/contact" },
+    menuButtonLabel: "Menu",
+    mobileLinks: [],
+  });
+
+  assert.deepStrictEqual(
+    primaryLinks.map((l) => l.href),
+    ["/", "/collections", "/gallery", "/about", "/contact"]
+  );
+  assert.strictEqual(
+    primaryLinks.find((l) => l.href === "/collections")?.label,
+    "Collections"
+  );
+  assert.ok(!mobileLinks.some((l) => l.href.startsWith("/categories")));
+  assert.strictEqual(quoteCta.label, "Get a Quote");
+});
+
+test("Legacy /categories/[slug] resolves valid mappings cleanly without catching unknown slugs", () => {
+  const cats = [
+    { id: "1", name: "Gates", slug: "gates", description: null, sort_order: 1, is_active: true },
+    { id: "2", name: "Stair railings", slug: "stair-railings", description: null, sort_order: 2, is_active: true },
+    { id: "3", name: "Balcony railings", slug: "balcony-railings", description: null, sort_order: 3, is_active: true },
+  ];
+  assert.strictEqual(colMod.resolveCategoryToCollectionSlug("gates", cats), "gates");
+  assert.strictEqual(colMod.resolveCategoryToCollectionSlug("main-gates", cats), "gates");
+  assert.strictEqual(colMod.resolveCategoryToCollectionSlug("staircase-railings", cats), "stair-railings");
+  assert.strictEqual(colMod.resolveCategoryToCollectionSlug("unknown-garbage-slug", cats), null);
 });
 
 console.log(`\nPassed ${passed} CMS system checks successfully.\n`);

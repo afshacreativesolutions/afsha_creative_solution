@@ -3,6 +3,8 @@ import { getPublicBlogPosts, getPublicCategories, getPublicProducts } from "@/li
 import { getPublishedCmsRoutesForSitemap } from "@/lib/cms/queries";
 import { absoluteUrl } from "@/lib/site-config";
 
+export const revalidate = 300;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [cmsRoutes, products, categories, posts] = await Promise.all([
     getPublishedCmsRoutesForSitemap().catch(() => []),
@@ -14,7 +16,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const seenUrls = new Set<string>();
   const routes: MetadataRoute.Sitemap = [];
 
+  // Core Collections hub
+  const collectionsHubUrl = absoluteUrl("/collections");
+  seenUrls.add(collectionsHubUrl);
+  routes.push({
+    url: collectionsHubUrl,
+    lastModified: new Date(),
+    changeFrequency: "weekly",
+    priority: 0.92,
+  });
+
   for (const cmsRoute of cmsRoutes) {
+    // Exclude retired /categories routes in favor of /collections
+    if (
+      cmsRoute.slug === "/categories" ||
+      cmsRoute.slug.startsWith("/categories/")
+    ) {
+      continue;
+    }
+
     const url = absoluteUrl(cmsRoute.slug);
     if (seenUrls.has(url)) continue;
     seenUrls.add(url);
@@ -27,14 +47,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   for (const category of categories) {
-    const url = absoluteUrl(`/categories/${category.slug}`);
+    const url = absoluteUrl(`/collections/${category.slug}`);
     if (seenUrls.has(url)) continue;
     seenUrls.add(url);
     routes.push({
       url,
       lastModified: new Date(),
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.85,
     });
   }
 

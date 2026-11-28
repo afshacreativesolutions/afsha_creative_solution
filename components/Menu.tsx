@@ -16,16 +16,16 @@ const fallbackMenuCategories: CmsMegaMenuSetting["categories"] = [
     headline: MenuData.steelRailling.headline,
     description: MenuData.steelRailling.description,
     buttonText: MenuData.steelRailling.buttonText,
-    viewAllHref: "/products?category=railings&material=stainless-steel",
+    viewAllHref: "/collections/stair-railings",
     cards: MenuData.steelRailling.cards.map((c) => ({
       title: c.title,
-      href: `/products?category=${
+      href: `/collections/${
         c.title.toLowerCase().includes("spiral")
           ? "spiral-railings"
           : c.title.toLowerCase().includes("balcony")
             ? "balcony-railings"
             : "stair-railings"
-      }&material=stainless-steel`,
+      }`,
       image: { url: c.image.src, alt: c.title },
     })),
   },
@@ -35,10 +35,10 @@ const fallbackMenuCategories: CmsMegaMenuSetting["categories"] = [
     headline: MenuData.steelGates.headline,
     description: MenuData.steelGates.description,
     buttonText: MenuData.steelGates.buttonText,
-    viewAllHref: "/products?category=gates&material=stainless-steel",
+    viewAllHref: "/collections/gates",
     cards: MenuData.steelGates.cards.map((c) => ({
       title: c.title,
-      href: "/products?category=gates&material=stainless-steel",
+      href: "/collections/gates",
       image: { url: c.image.src, alt: c.title },
     })),
   },
@@ -48,12 +48,12 @@ const fallbackMenuCategories: CmsMegaMenuSetting["categories"] = [
     headline: MenuData.ironRailling.headline,
     description: MenuData.ironRailling.description,
     buttonText: MenuData.ironRailling.buttonText,
-    viewAllHref: "/products?category=railings&material=iron",
+    viewAllHref: "/collections/balcony-railings",
     cards: MenuData.ironRailling.cards.map((c) => ({
       title: c.title,
-      href: `/products?category=${
+      href: `/collections/${
         c.title.toLowerCase().includes("balcony") ? "balcony-railings" : "stair-railings"
-      }&material=iron`,
+      }`,
       image: { url: c.image.src, alt: c.title },
     })),
   },
@@ -63,10 +63,10 @@ const fallbackMenuCategories: CmsMegaMenuSetting["categories"] = [
     headline: MenuData.ironGates.headline,
     description: MenuData.ironGates.description,
     buttonText: MenuData.ironGates.buttonText,
-    viewAllHref: "/products?category=gates&material=iron",
+    viewAllHref: "/collections/gates",
     cards: MenuData.ironGates.cards.map((c) => ({
       title: c.title,
-      href: "/products?category=gates&material=iron",
+      href: "/collections/gates",
       image: { url: c.image.src, alt: c.title },
     })),
   },

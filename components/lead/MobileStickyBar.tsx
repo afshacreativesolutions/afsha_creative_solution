@@ -26,6 +26,16 @@ function deriveContextFromPath(pathname: string): {
   productSlug?: string;
   label: string;
 } {
+  if (pathname.startsWith("/collections/")) {
+    const slug = pathname.replace("/collections/", "").split("/")[0];
+    const label = toTitleLabel(slug);
+    return {
+      intent: "category",
+      eventName: "category_enquiry_click",
+      categorySlug: slug,
+      label,
+    };
+  }
   if (pathname.startsWith("/categories/")) {
     const slug = pathname.replace("/categories/", "").split("/")[0];
     const label = toTitleLabel(slug);

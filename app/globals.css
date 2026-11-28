@@ -293,3 +293,13 @@
   0%   { background-color: color-mix(in srgb, #CDA274, transparent); }
   100% { background-color: color-mix(in srgb, #CDA274 0%, transparent); }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .gold-stick,
+  .animated-button__icon,
+  .animated-button__icon__dot,
+  .animated-button__text {
+    animation: none !important;
+    transition: none !important;
+  }
+}

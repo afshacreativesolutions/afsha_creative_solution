@@ -17,8 +17,8 @@ export default function HeroSection({ content }: { content: HeroBannerContent })
           eyebrow={content.eyebrow}
           heading={content.heading}
           subtitle={content.subtitle}
-          primaryButton={content.primaryButton}
-          secondaryButton={content.secondaryButton}
+          primaryButton={{ label: "Get a Free Quote", href: "#quote-modal" }}
+          secondaryButton={{ label: "Explore Collections", href: "/collections" }}
           scrollLabel={content.scrollAnchorLabel}
           videoDesktopWebm={content.videoDesktopWebm}
           videoDesktopMp4={content.videoDesktopMp4}

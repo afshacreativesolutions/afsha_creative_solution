@@ -154,8 +154,18 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: canonicalUrl("/") },
-      { "@type": "ListItem", position: 2, name: "Products", item: canonicalUrl("/products") },
-      { "@type": "ListItem", position: 3, name: product.name, item: productCanonical },
+      { "@type": "ListItem", position: 2, name: "Collections", item: canonicalUrl("/collections") },
+      ...(product.category?.slug
+        ? [
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: product.category.name,
+              item: canonicalUrl(`/collections/${product.category.slug}`),
+            },
+            { "@type": "ListItem", position: 4, name: product.name, item: productCanonical },
+          ]
+        : [{ "@type": "ListItem", position: 3, name: product.name, item: productCanonical }]),
     ],
   };
 
@@ -165,7 +175,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       <Breadcrumbs
         items={[
           { name: "Home", href: "/" },
-          { name: "Products", href: "/products" },
+          { name: "Collections", href: "/collections" },
+          ...(product.category?.slug
+            ? [{ name: product.category.name, href: `/collections/${product.category.slug}` }]
+            : []),
           { name: product.name, href: `/products/${product.slug}` },
         ]}
       />
@@ -173,10 +186,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       {/* Balanced Hero: Mobile shows Image Gallery first, then Title, Description & 3 Enquiry Actions */}
       <section className="mx-auto max-w-7xl px-4 pb-10 pt-2 sm:px-6 sm:pb-14 sm:pt-7">
         <Link
-          href="/products"
+          href={product.category?.slug ? `/collections/${product.category.slug}` : "/collections"}
           className="mb-4 inline-flex min-h-11 items-center gap-3 text-[10px] uppercase tracking-[0.16em] text-white/50 transition-colors hover:text-textGold sm:mb-6 sm:tracking-[0.2em]"
         >
-          <ArrowLeft size={14} /> {tpl.backLabel}
+          <ArrowLeft size={14} />{" "}
+          {product.category?.name ? `Back to ${product.category.name}` : "All Collections"}
         </Link>
 
         <div className="grid min-w-0 gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start lg:gap-10">
@@ -328,6 +342,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                         src={image.url}
                         alt={image.alt_text || `${product.name} design ${index + 1}`}
                         fill
+                        unoptimized={image.url.includes("supabase.co")}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                       />

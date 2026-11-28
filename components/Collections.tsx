@@ -66,7 +66,7 @@ export const Collections = ({
 
       <div className="flex w-full justify-center sm:w-auto">
         <Link
-          href={`/products?category=${selectCollecton === "Gates" ? "gates" : "railings"}&material=all`}
+          href={`/collections/${selectCollecton === "Gates" ? "gates" : "stair-railings"}`}
           className="block w-full max-w-[280px] sm:w-auto"
         >
           <AnimatedButton

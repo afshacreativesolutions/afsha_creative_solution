@@ -83,7 +83,7 @@ const Testimonials = ({
     highlightCard && !/railingo/i.test(highlightCard.quote || "") ? highlightCard : null;
 
   return (
-    <section id={sectionId} aria-label="Testimonials" className="bg-cardGray/20">
+    <section id={sectionId} aria-label="Testimonials" className="overflow-x-clip bg-cardGray/20">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:gap-8 sm:px-6 sm:py-14">
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:gap-5">
           <div className="w-full font-heading text-2xl font-extralight tracking-[0.01em] sm:w-[45%] sm:text-3xl">

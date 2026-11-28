@@ -67,24 +67,16 @@ export const DEFAULT_SITE_SETTINGS: CmsSiteSettingsBundle = {
   navigation: {
     desktopLinks: [
       { label: "Home", href: "/" },
-      { label: "Categories", href: "/categories" },
-      { label: "Collection", href: "/products" },
+      { label: "Collections", href: "/collections" },
       { label: "Gallery", href: "/gallery" },
-      { label: "Custom Work", href: "/custom-metalwork" },
-      { label: "Services", href: "/services" },
       { label: "About", href: "/about" },
     ],
     contactLink: { label: "Contact", href: "/contact" },
     menuButtonLabel: "Menu",
     mobileLinks: [
       { label: "Home", href: "/" },
-      { label: "Categories", href: "/categories" },
-      { label: "Collection", href: "/products" },
+      { label: "Collections", href: "/collections" },
       { label: "Gallery", href: "/gallery" },
-      { label: "Custom Metalwork", href: "/custom-metalwork" },
-      { label: "Services", href: "/services" },
-      { label: "FAQ", href: "/faq" },
-      { label: "Blog & Guides", href: "/blog" },
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
     ],
@@ -207,7 +199,7 @@ export const DEFAULT_SITE_SETTINGS: CmsSiteSettingsBundle = {
     ],
     discoverTitle: "DISCOVER",
     discoverLinks: [
-      { label: "Categories", href: "/categories" },
+      { label: "Collections", href: "/collections" },
       { label: "All Products", href: "/products" },
       { label: "Gallery", href: "/gallery" },
       { label: "Custom Metalwork", href: "/custom-metalwork" },
@@ -834,10 +826,68 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
         },
       },
       {
+        section_key: "about-testimonials",
+        section_type: "testimonials",
+        title: "Customer Testimonials & Statistics",
+        sort_order: 3,
+        is_visible: true,
+        content: {
+          sectionId: "about-testimonials",
+          heading: "CRAFTED FOR SPACES. TRUSTED BY CUSTOMERS.",
+          description:
+            "From the first measurement to the finished installation, our work is built around the customer's requirements. See what customers have to say about their experience with Afsha Creative Solution.",
+          cta: { label: "GET A QUOTE", href: "/contact" },
+          highlightCard: null,
+          showStats: true,
+          stats: [
+            { value: "80+", label: "Total Reviews" },
+            { value: "100+", label: "Custom Railings" },
+            { value: "400+", label: "Custom Gates" },
+            { value: "10+", label: "Years Experience" },
+            { value: "99.4%", label: "On-Time Handover" },
+          ],
+          items: [
+            {
+              id: "about-review-mohit",
+              author: "Mohit Agarwal",
+              role: "Verified Client",
+              quote:
+                "“We needed a custom main gate for our house. The team understood the design we wanted and delivered a strong, well-finished gate.”",
+              avatarLetter: "M",
+              avatarBgClass: "bg-green-700",
+              image: img("asset:iron_gates.ironGate5", "Custom wrought iron main gate"),
+              imagePosition: "bottom",
+            },
+            {
+              id: "about-review-rahul",
+              author: "Rahul Sharma",
+              role: "Verified Client",
+              quote:
+                "“The stair railing was designed exactly according to our requirement. The finishing looks clean and the overall work was handled professionally.”",
+              avatarLetter: "R",
+              avatarBgClass: "bg-blue-700",
+              image: img("asset:steel_stair_railing.ssStairRailling8", "Stainless steel stair railing"),
+              imagePosition: "top",
+            },
+            {
+              id: "about-review-amit",
+              author: "Amit Verma",
+              role: "Verified Client",
+              quote:
+                "“We wanted a modern balcony railing for our new home. The design and fabrication turned out very well and matched the look of the house.”",
+              avatarLetter: "A",
+              avatarBgClass: "bg-red-700",
+              image: img("asset:steel_balcony_railing.ssBalconyRailling9", "Modern balcony railing"),
+              imagePosition: "bottom",
+            },
+          ],
+        },
+      },
+      {
         section_key: "about-cta",
         section_type: "cta_banner",
         title: "About Bottom CTA",
-        sort_order: 3,
+        sort_order: 4,
         is_visible: true,
         content: {
           variant: "gold_glow_card",
@@ -1458,25 +1508,25 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
     ],
   },
 
-  // 5. CATEGORIES PAGE (/categories)
+  // 5. COLLECTIONS PAGE (/collections)
   {
-    title: "Categories",
-    slug: "/categories",
+    title: "Collections",
+    slug: "/collections",
     page_type: "catalog",
-    meta_title: "Architectural Metalwork Categories | Afsha Creative Solutions",
+    meta_title: "Architectural Metalwork Collections | Afsha Creative Solutions",
     meta_description:
       "Explore our complete collection of custom metal gates, iron gates, stainless steel railings, balcony balustrades, staircase railings, and decorative metalwork crafted in Moradabad.",
     meta_keywords: DEFAULT_SITE_SETTINGS.seo_defaults.keywords,
-    canonical_url: "/categories",
+    canonical_url: "/collections",
     og_image: "/opengraph-image",
-    og_image_alt: "Architectural Metalwork Categories — Afsha Creative Solutions",
+    og_image_alt: "Architectural Metalwork Collections — Afsha Creative Solutions",
     structured_data: {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
-      name: "Architectural Metalwork Categories",
+      name: "Architectural Metalwork Collections",
       description:
-        "Browse categories of custom metal gates, iron gates, steel railings, balcony balustrades, and bespoke fabrication by Afsha Creative Solutions in Moradabad.",
-      url: "https://www.afshacreative.in/categories",
+        "Browse collections of custom metal gates, iron gates, steel railings, balcony balustrades, and bespoke fabrication by Afsha Creative Solutions in Moradabad.",
+      url: "https://www.afshacreative.in/collections",
     },
     sections: [
       {
@@ -1494,7 +1544,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
             "Discover our collections of custom main gates, handcrafted wrought iron balustrades, stainless steel railings, and bespoke metal fabrication made to measure for Indian homes.",
           breadcrumbs: [
             { name: "Home", href: "/" },
-            { name: "Categories", href: "/categories" },
+            { name: "Collections", href: "/collections" },
           ],
           showBreadcrumbs: true,
           primaryButton: { label: "View All Products", href: "/products" },
@@ -1525,7 +1575,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
               id: "main-gates",
               name: "Main Gates",
               slug: "gates",
-              href: "/categories/gates",
+              href: "/collections/gates",
               image: img("asset:steel_gate.ssGate13", "Main Gates"),
               material: "Stainless Steel & Wrought Iron",
               description:
@@ -1592,7 +1642,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
               id: "balcony-railings",
               name: "Balcony Railings",
               slug: "balcony-railings",
-              href: "/categories/balcony-railings",
+              href: "/collections/balcony-railings",
               image: img("asset:iron_balcony_railing.ironbrail3", "Balcony Railings"),
               material: "Wrought Iron & SS-304",
               description:
@@ -1609,7 +1659,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
               id: "staircase-railings",
               name: "Staircase Railings",
               slug: "stair-railings",
-              href: "/categories/stair-railings",
+              href: "/collections/stair-railings",
               image: img("asset:steel_stair_railing.ssStairRailling13", "Staircase Railings"),
               material: "Steel, Iron & Wood-Top Profiles",
               description:
@@ -1676,7 +1726,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
               id: "grid-main-gates",
               name: "Main Gates",
               slug: "gates",
-              href: "/categories/gates",
+              href: "/collections/gates",
               image: img("asset:steel_gate.ssGate13", "Main Gates"),
               material: "304 Stainless Steel & Wrought Iron",
               description:
@@ -1693,7 +1743,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
               id: "grid-balcony-railings",
               name: "Balcony Railings",
               slug: "balcony-railings",
-              href: "/categories/balcony-railings",
+              href: "/collections/balcony-railings",
               image: img("asset:iron_balcony_railing.ironbrail3", "Balcony Railings"),
               material: "Wrought Iron & SS-304",
               description:
@@ -1710,7 +1760,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
               id: "grid-staircase-railings",
               name: "Staircase Railings",
               slug: "stair-railings",
-              href: "/categories/stair-railings",
+              href: "/collections/stair-railings",
               image: img("asset:steel_stair_railing.ssStairRailling13", "Staircase Railings"),
               material: "Steel, Iron & Wood-Top Profiles",
               description:
@@ -1727,7 +1777,7 @@ export const SEED_CMS_PAGES: SeedPageDef[] = [
               id: "grid-spiral-railings",
               name: "Spiral & Curved Railings",
               slug: "spiral-railings",
-              href: "/categories/spiral-railings",
+              href: "/collections/spiral-railings",
               image: img("asset:steel_spiral_railing.ssSpiralRailling3", "Spiral & Curved Railings"),
               material: "Roll-Bent Stainless Steel & Forged Iron",
               description:

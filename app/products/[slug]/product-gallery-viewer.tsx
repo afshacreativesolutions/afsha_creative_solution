@@ -61,21 +61,22 @@ export default function ProductGalleryViewer({
   const setSuppressedByOverlay = enquiry?.setSuppressedByOverlay;
 
   const safeImages = images.filter((img): img is ProductGalleryImage & { url: string } => Boolean(img.url));
-  const activeIndex = safeImages.length > 0 ? Math.min(selectedIndex, safeImages.length - 1) : 0;
+  const imageCount = safeImages.length;
+  const activeIndex = imageCount > 0 ? Math.min(selectedIndex, imageCount - 1) : 0;
   const activeImage = safeImages[activeIndex] ?? null;
   const activeDesignCode = `${designPrefix}-${String(activeIndex + 1).padStart(2, "0")}`;
 
   const showPrev = useCallback(() => {
-    if (safeImages.length <= 1) return;
+    if (imageCount <= 1) return;
     setZoomed(false);
-    setSelectedIndex((prev) => (prev === 0 ? safeImages.length - 1 : prev - 1));
-  }, [safeImages.length]);
+    setSelectedIndex((prev) => (prev === 0 ? imageCount - 1 : prev - 1));
+  }, [imageCount]);
 
   const showNext = useCallback(() => {
-    if (safeImages.length <= 1) return;
+    if (imageCount <= 1) return;
     setZoomed(false);
-    setSelectedIndex((prev) => (prev + 1) % safeImages.length);
-  }, [safeImages.length]);
+    setSelectedIndex((prev) => (prev + 1) % imageCount);
+  }, [imageCount]);
 
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false);
@@ -130,6 +131,7 @@ export default function ProductGalleryViewer({
                   alt={activeImage.alt_text || `${productName} — ${activeDesignCode}`}
                   fill
                   priority
+                  unoptimized={activeImage.url.includes("supabase.co")}
                   sizes="(max-width: 1024px) 100vw, 55vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                 />
@@ -253,6 +255,7 @@ export default function ProductGalleryViewer({
                     src={img.url}
                     alt={img.alt_text || `${productName} thumbnail ${idx + 1}`}
                     fill
+                    unoptimized={img.url.includes("supabase.co")}
                     sizes="72px"
                     className="object-cover"
                   />
